@@ -4,10 +4,10 @@ import (
 	"crypto/tls"
 	"flag"
 	"github.com/eyedeekay/goSam"
+    "github.com/eyedeekay/httptunnel"
 	"log"
 	"net/http"
-    "time"
-    "github.com/eyedeekay/httptunnel"
+	"time"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 	flag.Parse()
 
 	sam, err := goSam.NewClientFromOptions(
-        goSam.SetHost("127.0.0.1"),
+		goSam.SetHost("127.0.0.1"),
 		goSam.SetPort("7656"),
 		goSam.SetUnpublished(true),
 		goSam.SetInLength(uint(2)),
@@ -26,11 +26,12 @@ func main() {
 		goSam.SetOutBackups(uint(2)),
 		goSam.SetReduceIdle(true),
 		goSam.SetReduceIdleTime(uint(2000000)),
-    )
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 	handler := &i2phttpproxy.Proxy{
+        Sam: sam,
 		Client: &http.Client{
 			Transport: &http.Transport{
 				Dial:                  sam.Dial,

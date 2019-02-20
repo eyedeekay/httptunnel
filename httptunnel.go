@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 	"strings"
+    "crypto/tls"
+    "time"
+    "github.com/eyedeekay/goSam"
 )
 
 // Hop-by-hop headers. These are removed when sent to the backend.
@@ -35,7 +38,27 @@ func delHopHeaders(header http.Header) {
 }
 
 type Proxy struct {
+    Sam    *goSam.Client
 	Client *http.Client
+}
+
+func (p *Proxy) freshClient() *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			Dial:                  p.Sam.Dial,
+			MaxIdleConns:          0,
+			MaxIdleConnsPerHost:   3,
+			DisableKeepAlives:     false,
+			ResponseHeaderTimeout: time.Second * 600,
+			ExpectContinueTimeout: time.Second * 600,
+			IdleConnTimeout:       time.Second * 600,
+			TLSNextProto:          make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+		},
+		CheckRedirect: nil,
+		Timeout:       time.Second * 600,
+	}
+
 }
 
 func (p *Proxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
@@ -52,19 +75,20 @@ func (p *Proxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 
 	delHopHeaders(req.Header)
 
-	resp, err := p.Client.Do(req)
+	go p.get(wr, req)
+}
+
+func (p *Proxy) get(wr http.ResponseWriter, req *http.Request) {
+    Client := p.freshClient()
+	resp, err := Client.Do(req)
+    //resp, err := p.Client.Do(req)
 	if err != nil {
-		http.Error(wr, "Server Error", http.StatusInternalServerError)
+		//http.Error(wr, "Server Error", http.StatusInternalServerError)
 		log.Println("ServeHTTP:", err)
 		return
 	}
 	defer resp.Body.Close()
 
-	log.Println(req.RemoteAddr, " ", resp.Status)
-
-	delHopHeaders(resp.Header)
-
-	copyHeader(wr.Header(), resp.Header)
 	wr.WriteHeader(resp.StatusCode)
 	io.Copy(wr, resp.Body)
 }
