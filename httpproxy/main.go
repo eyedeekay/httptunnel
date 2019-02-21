@@ -25,7 +25,6 @@ func main() {
 }
 
 func proxyMain(ctx context.Context, ln net.Listener) {
-	var addr = flag.String("addr", "127.0.0.1:7950", "The addr of the application.")
 	flag.Parse()
 
 	sam, err := goSam.NewClientFromOptions(
