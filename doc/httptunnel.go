@@ -91,39 +91,3 @@ func (p *Proxy) get(wr http.ResponseWriter, req *http.Request) {
 	wr.WriteHeader(resp.StatusCode)
 	io.Copy(wr, resp.Body)
 }
-
-func NewHttpProxy() (*Proxy, error) {
-	sam, err := goSam.NewClientFromOptions(
-		goSam.SetHost("127.0.0.1"),
-		goSam.SetPort("7656"),
-		goSam.SetUnpublished(true),
-		goSam.SetInLength(uint(2)),
-		goSam.SetOutLength(uint(2)),
-		goSam.SetInQuantity(uint(4)),
-		goSam.SetOutQuantity(uint(4)),
-		goSam.SetInBackups(uint(2)),
-		goSam.SetOutBackups(uint(2)),
-		goSam.SetReduceIdle(true),
-		goSam.SetReduceIdleTime(uint(2000000)),
-	)
-	return nil, err
-	handler := Proxy{
-		Sam: sam,
-		Client: &http.Client{
-			Transport: &http.Transport{
-				Dial:                  sam.Dial,
-				MaxIdleConns:          0,
-				MaxIdleConnsPerHost:   3,
-				DisableKeepAlives:     false,
-				ResponseHeaderTimeout: time.Second * 600,
-				ExpectContinueTimeout: time.Second * 600,
-				IdleConnTimeout:       time.Second * 600,
-				TLSNextProto:          make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
-				TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
-			},
-			CheckRedirect: nil,
-			Timeout:       time.Second * 600,
-		},
-	}
-	return &handler, nil
-}
