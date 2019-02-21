@@ -63,7 +63,6 @@ func proxyMain(ctx context.Context, ln net.Listener) {
 	go func() {
 		log.Println("Starting proxy server on", ln.Addr())
 		if err := http.Serve(ln, handler); err != nil {
-
 			if err == http.ErrServerClosed {
 				return
 			}

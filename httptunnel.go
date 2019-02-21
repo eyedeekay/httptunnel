@@ -31,7 +31,6 @@ var hopHeaders = []string{
 
 func delHopHeaders(header http.Header) {
 	for _, h := range hopHeaders {
-		dii2perrs.Log("si-http-proxy.go Sanitizing headers: ", h, header.Get(h))
 		header.Del(h)
 	}
 	if header.Get("User-Agent") != "MYOB/6.66 (AN/ON)" {
