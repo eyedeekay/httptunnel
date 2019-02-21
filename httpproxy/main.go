@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"flag"
 	"log"
 	"net"
 	"net/http"
@@ -18,14 +17,13 @@ import (
 
 func main() {
 	lb := littleboss.New("i2p-http-tunnel")
-	flagHTTPS := lb.Listener("http", "tcp", "127.0.0.1:7950", "The address of the application")
+	ln := lb.Listener("http", "tcp", "127.0.0.1:7950", "The address of the proxy")
 	lb.Run(func(ctx context.Context) {
-		proxyMain(ctx, flagHTTPS.Listener())
+		proxyMain(ctx, ln.Listener())
 	})
 }
 
 func proxyMain(ctx context.Context, ln net.Listener) {
-	flag.Parse()
 
 	sam, err := goSam.NewClientFromOptions(
 		goSam.SetHost("127.0.0.1"),
@@ -61,13 +59,19 @@ func proxyMain(ctx context.Context, ln net.Listener) {
 			Timeout:       time.Second * 600,
 		},
 	}
+
 	go func() {
 		log.Println("Starting proxy server on", ln.Addr())
 		if err := http.Serve(ln, handler); err != nil {
-			log.Fatal("ListenAndServe:", err)
+
+			if err == http.ErrServerClosed {
+				return
+			}
+			log.Fatal("Serve:", err)
 		}
 	}()
 
+	log.Println("Stopping proxy server on", ln.Addr())
 	<-ctx.Done()
 	handler.Shutdown(ctx)
 }

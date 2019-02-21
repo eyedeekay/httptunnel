@@ -79,15 +79,13 @@ func (p *Proxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 
 	delHopHeaders(req.Header)
 
-	go p.get(wr, req)
+	p.get(wr, req)
 }
 
 func (p *Proxy) get(wr http.ResponseWriter, req *http.Request) {
 	Client := p.freshClient()
 	resp, err := Client.Do(req)
-	//resp, err := p.Client.Do(req)
 	if err != nil {
-		//http.Error(wr, "Server Error", http.StatusInternalServerError)
 		log.Println("ServeHTTP:", err)
 		return
 	}
@@ -95,8 +93,4 @@ func (p *Proxy) get(wr http.ResponseWriter, req *http.Request) {
 
 	wr.WriteHeader(resp.StatusCode)
 	io.Copy(wr, resp.Body)
-}
-
-func (p *Proxy) Shutdown(ctx context.Context) {
-	p.Sam.Close()
 }
