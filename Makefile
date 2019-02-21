@@ -72,9 +72,6 @@ mac32:
 		-o ./httpproxy-32.app \
 		./httpproxy/main.go
 
-js:
-	gopherjs build ./httpproxy
-
 vet:
 	go vet ./*.go
 	go vet ./httpproxy/*.go

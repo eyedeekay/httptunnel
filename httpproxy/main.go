@@ -18,6 +18,7 @@ import (
 func main() {
 	lb := littleboss.New("i2p-http-tunnel")
 	ln := lb.Listener("http", "tcp", "127.0.0.1:7950", "The address of the proxy")
+	//cln := lb.Listener("http", "tcp", "127.0.0.1:7951", "The address of the proxy controller")
 	lb.Run(func(ctx context.Context) {
 		proxyMain(ctx, ln.Listener())
 	})
