@@ -24,7 +24,6 @@ func main() {
 }
 
 func proxyMain(ctx context.Context, ln net.Listener) {
-
 	sam, err := goSam.NewClientFromOptions(
 		goSam.SetHost("127.0.0.1"),
 		goSam.SetPort("7656"),
@@ -41,6 +40,7 @@ func proxyMain(ctx context.Context, ln net.Listener) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	handler := &i2phttpproxy.Proxy{
 		Sam: sam,
 		Client: &http.Client{
@@ -73,5 +73,4 @@ func proxyMain(ctx context.Context, ln net.Listener) {
 
 	log.Println("Stopping proxy server on", ln.Addr())
 	<-ctx.Done()
-	handler.Shutdown(ctx)
 }
