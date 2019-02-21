@@ -8,6 +8,7 @@ fmt:
 
 dep:
 	go get -u github.com/eyedeekay/httptunnel/httpproxy
+	go get -u github.com/gopherjs/gopherjs
 
 win: win32 win64
 
@@ -71,4 +72,10 @@ mac32:
 		-o ./httpproxy-32.app \
 		./httpproxy/main.go
 
+js:
+	gopherjs build ./httpproxy
 
+vet:
+	go vet ./*.go
+	go vet ./httpproxy/*.go
+	go vet ./windows/*.go
