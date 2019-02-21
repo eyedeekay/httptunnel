@@ -4,14 +4,14 @@ import (
 	"crypto/tls"
 	"flag"
 	"github.com/eyedeekay/goSam"
-    "github.com/eyedeekay/httptunnel"
+	"github.com/eyedeekay/httptunnel"
 	"log"
 	"net/http"
 	"time"
 )
 
 func main() {
-	var addr = flag.String("addr", "127.0.0.1:7844", "The addr of the application.")
+	var addr = flag.String("addr", "127.0.0.1:7950", "The addr of the application.")
 	flag.Parse()
 
 	sam, err := goSam.NewClientFromOptions(
@@ -31,7 +31,7 @@ func main() {
 		log.Fatal(err)
 	}
 	handler := &i2phttpproxy.Proxy{
-        Sam: sam,
+		Sam: sam,
 		Client: &http.Client{
 			Transport: &http.Transport{
 				Dial:                  sam.Dial,

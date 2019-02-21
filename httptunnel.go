@@ -1,13 +1,17 @@
 package i2phttpproxy
 
 import (
+	"context"
+	"crypto/tls"
 	"io"
 	"log"
 	"net/http"
 	"strings"
-    "crypto/tls"
-    "time"
-    "github.com/eyedeekay/goSam"
+	"time"
+)
+
+import (
+	"github.com/eyedeekay/goSam"
 )
 
 // Hop-by-hop headers. These are removed when sent to the backend.
@@ -38,7 +42,7 @@ func delHopHeaders(header http.Header) {
 }
 
 type Proxy struct {
-    Sam    *goSam.Client
+	Sam    *goSam.Client
 	Client *http.Client
 }
 
@@ -79,9 +83,9 @@ func (p *Proxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 }
 
 func (p *Proxy) get(wr http.ResponseWriter, req *http.Request) {
-    Client := p.freshClient()
+	Client := p.freshClient()
 	resp, err := Client.Do(req)
-    //resp, err := p.Client.Do(req)
+	//resp, err := p.Client.Do(req)
 	if err != nil {
 		//http.Error(wr, "Server Error", http.StatusInternalServerError)
 		log.Println("ServeHTTP:", err)
@@ -91,4 +95,8 @@ func (p *Proxy) get(wr http.ResponseWriter, req *http.Request) {
 
 	wr.WriteHeader(resp.StatusCode)
 	io.Copy(wr, resp.Body)
+}
+
+func (p *Proxy) Shutdown(ctx context.Context) {
+	p.Sam.Close()
 }
