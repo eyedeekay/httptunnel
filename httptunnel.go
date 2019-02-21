@@ -1,7 +1,6 @@
 package i2phttpproxy
 
 import (
-	"context"
 	"crypto/tls"
 	"io"
 	"log"
