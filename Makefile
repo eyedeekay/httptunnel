@@ -76,3 +76,6 @@ vet:
 	go vet ./*.go
 	go vet ./httpproxy/*.go
 	go vet ./windows/*.go
+
+clean:
+	rm -f httpproxy-*
