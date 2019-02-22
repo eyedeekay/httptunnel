@@ -96,7 +96,7 @@ func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	}
 
 	if req.Method == http.MethodConnect {
-        log.Println("Connecting tunnel")
+		log.Println("Connecting tunnel")
 		p.connect(wr, req)
 	} else {
 		req.RequestURI = ""
@@ -226,8 +226,8 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 			ResponseHeaderTimeout: time.Second * 600,
 			ExpectContinueTimeout: time.Second * 600,
 			IdleConnTimeout:       time.Second * 600,
-			//TLSNextProto:          make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
-			//TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+			TLSNextProto:          make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 		},
 		CheckRedirect: nil,
 		Timeout:       time.Second * 600,

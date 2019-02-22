@@ -17,6 +17,8 @@ var (
 	samPortString        = flag.String("bridge-port", "7656", ":port of the SAM bridge")
 	proxHostString       = flag.String("proxy-host", "127.0.0.1", "host: of the HTTP proxy")
 	proxPortString       = flag.String("proxy-port", "7950", ":port of the HTTP proxy")
+	controlHostString    = flag.String("control-host", "127.0.0.1", "The host of the controller")
+	controlPortString    = flag.String("control-host", "7951", "The port of the controller")
 	debugConnection      = flag.Bool("conn-debug", false, "Print connection debug info")
 	inboundTunnelLength  = flag.Int("in-tun-length", 3, "Tunnel Length(default 3)")
 	outboundTunnelLength = flag.Int("out-tun-length", 3, "Tunnel Length(default 3)")
@@ -42,6 +44,7 @@ func main() {
 		WriteTimeout: 600 * time.Second,
 		Addr:         addr,
 	}
+	go SetupController(srv, *controlHostString+":"+*controlPortString)
 	var err error
 	srv.Handler, err = NewHttpProxy(
 		SetHost(*samHostString),
@@ -64,7 +67,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-    go counter()
+	go counter()
 
 	log.Println("Starting proxy server on", addr)
 	if err := srv.ListenAndServe(); err != nil {
@@ -79,4 +82,24 @@ func counter() {
 		time.Sleep(1 * time.Minute)
 		x++
 	}
+}
+
+func SetupController(srv *http.Server, addr string) {
+	ctrlsrv := &http.Server{
+		ReadTimeout:  600 * time.Second,
+		WriteTimeout: 600 * time.Second,
+		Addr:         addr,
+		Handler: &SAMHTTPController{
+			ProxyServer: srv,
+		},
+	}
+
+	log.Println("Starting control server on", addr)
+	if err := ctrlsrv.ListenAndServe(); err != nil {
+		if err == http.ErrServerClosed {
+			return
+		}
+		log.Fatal("Serve:", err)
+	}
+	log.Println("Stopping control server on", addr)
 }

@@ -20,4 +20,5 @@ Features: Done
 
   * Self-supervising, Self-restarting on Unixes
   * CONNECT support
-  * "New Ident" signaling interface(Unix-only for now)
+  * "New Ident" signaling interface(Unix-only for now)(I guess I might have done
+  for Windows too now but I haven't tried it out yet).
