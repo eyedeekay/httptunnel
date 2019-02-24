@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -19,6 +20,7 @@ var (
 	proxPortString       = flag.String("proxy-port", "7950", ":port of the HTTP proxy")
 	controlHostString    = flag.String("control-host", "127.0.0.1", "The host of the controller")
 	controlPortString    = flag.String("control-host", "7951", "The port of the controller")
+	watchProfiles        = flag.String("watch-profiles", "~/.mozilla/.firefox.profile.i2p.default/user.js,~/.mozilla/.firefox.profile.i2p.debug/user.js", "Monitor and control these Firefox profiles")
 	debugConnection      = flag.Bool("conn-debug", false, "Print connection debug info")
 	inboundTunnelLength  = flag.Int("in-tun-length", 3, "Tunnel Length(default 3)")
 	outboundTunnelLength = flag.Int("out-tun-length", 3, "Tunnel Length(default 3)")
@@ -44,7 +46,8 @@ func main() {
 		WriteTimeout: 600 * time.Second,
 		Addr:         addr,
 	}
-	go SetupController(srv, *controlHostString+":"+*controlPortString)
+	profiles := strings.Split(*watchProfiles, ",")
+	go SetupController(srv, *controlHostString+":"+*controlPortString, profiles)
 	var err error
 	srv.Handler, err = NewHttpProxy(
 		SetHost(*samHostString),
@@ -84,15 +87,14 @@ func counter() {
 	}
 }
 
-func SetupController(srv *http.Server, addr string) {
+func SetupController(srv *http.Server, addr string, profiles []string) {
 	ctrlsrv := &http.Server{
 		ReadTimeout:  600 * time.Second,
 		WriteTimeout: 600 * time.Second,
 		Addr:         addr,
-		Handler: &SAMHTTPController{
-			ProxyServer: srv,
-		},
 	}
+	var err error
+	ctrlsrv.Handler, err = NewSAMHTTPController(profiles, srv)
 
 	log.Println("Starting control server on", addr)
 	if err := ctrlsrv.ListenAndServe(); err != nil {

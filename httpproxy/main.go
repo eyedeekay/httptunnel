@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+    "strings"
 	"time"
 )
 
@@ -18,6 +19,7 @@ var (
 	tunnelName           = flag.String("service-name", "sam-http-proxy", "Name of the service(can be anything)")
 	samHostString        = flag.String("bridge-host", "127.0.0.1", "host: of the SAM bridge")
 	samPortString        = flag.String("bridge-port", "7656", ":port of the SAM bridge")
+	watchProfiles        = flag.String("watch-profiles", "~/.mozilla/.firefox.profile.i2p.default/user.js,~/.mozilla/.firefox.profile.i2p.debug/user.js", "Monitor and control these Firefox profiles")
 	debugConnection      = flag.Bool("conn-debug", false, "Print connection debug info")
 	inboundTunnelLength  = flag.Int("in-tun-length", 2, "Tunnel Length(default 3)")
 	outboundTunnelLength = flag.Int("out-tun-length", 2, "Tunnel Length(default 3)")
@@ -47,6 +49,8 @@ func main() {
 
 func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 	flag.Parse()
+	profiles := strings.Split(*watchProfiles, ",")
+
 	srv := &http.Server{
 		ReadTimeout:  600 * time.Second,
 		WriteTimeout: 600 * time.Second,
@@ -73,12 +77,13 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	ctrlsrv := &http.Server{
 		ReadTimeout:  600 * time.Second,
 		WriteTimeout: 600 * time.Second,
 		Addr:         addr,
-		Handler:      &SAMHTTPController{},
 	}
+	ctrlsrv.Handler, err = NewSAMHTTPController(profiles, nil)
 
 	go func() {
 		log.Println("Starting control server on", cln.Addr())

@@ -2,6 +2,7 @@ package i2phttpproxy
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -10,7 +11,37 @@ import (
 )
 
 type SAMHTTPController struct {
-	ProxyServer *http.Server
+	ProxyServer   *http.Server
+	Profiles      []string
+	savedProfiles []string
+}
+
+func NewSAMHTTPController(profiles []string, proxy *http.Server) (*SAMHTTPController, error) {
+	var c SAMHTTPController
+	if proxy != nil {
+		c.ProxyServer = proxy
+	}
+	for index, profile := range profiles {
+		if bytes, err := ioutil.ReadFile(profile); err == nil {
+			log.Println("Monitoring Firefox Profile", index, "at:", profile)
+			c.Profiles = append(c.Profiles, profile)
+			c.savedProfiles = append(c.savedProfiles, string(bytes))
+		} else {
+			return nil, err
+		}
+	}
+	return &c, nil
+}
+
+func (p *SAMHTTPController) restoreProfiles() error {
+	for index, profile := range p.Profiles {
+		if err := ioutil.WriteFile(profile, []byte(p.savedProfiles[index]), 0644); err == nil {
+			log.Println("Resetting Firefox Profile", index, "at:", profile)
+		} else {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *SAMHTTPController) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
@@ -20,6 +51,10 @@ func (p *SAMHTTPController) ServeHTTP(wr http.ResponseWriter, req *http.Request)
 	} else {
 		err = unixRestart()
 	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = p.restoreProfiles()
 	if err != nil {
 		log.Fatal(err)
 	}
