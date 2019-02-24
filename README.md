@@ -13,7 +13,7 @@ Firefox configuration.
 It is not, and is not intended to be, and will not be intended for use by
 multiple clients at the same time. It might be more-or-less OK as part of an
 inproxy but you should only use it for one client at a time. A multi-client
-solution will also be available soon([eeProxy](https://github.com/eyedeekay/eeProxy).
+solution will also be available soon([eeProxy](https://github.com/eyedeekay/eeProxy)).
 
 Features: Done
 --------------
