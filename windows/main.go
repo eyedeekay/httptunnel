@@ -95,6 +95,9 @@ func SetupController(srv *http.Server, addr string, profiles []string) {
 	}
 	var err error
 	ctrlsrv.Handler, err = NewSAMHTTPController(profiles, srv)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	log.Println("Starting control server on", addr)
 	if err := ctrlsrv.ListenAndServe(); err != nil {
