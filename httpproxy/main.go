@@ -11,7 +11,8 @@ import (
 )
 
 import (
-	. "github.com/eyedeekay/httptunnel"
+	//. "github.com/eyedeekay/httptunnel"
+	. ".."
 	"github.com/eyedeekay/littleboss"
 )
 
@@ -30,10 +31,13 @@ var (
 	inboundVariance      = flag.Int("in-variance", 0, "Inbound Backup Count(default 3)")
 	outboundVariance     = flag.Int("out-variance", 0, "Inbound Backup Count(default 3)")
 	dontPublishLease     = flag.Bool("no-publish", true, "Don't publish the leaseset(Client mode)")
-	//encryptLease      = flag.Bool("encrypt-lease", true, "Encrypt the leaseset(")
-	reduceIdle         = flag.Bool("reduce-idle", false, "Reduce tunnels on extended idle time")
-	reduceIdleTime     = flag.Int("reduce-idle-time", 2000000, "Reduce tunnels after time(Ms)")
-	reduceIdleQuantity = flag.Int("reduce-idle-tunnels", 1, "Reduce tunnels to this level")
+	encryptLease         = flag.Bool("encrypt-lease", false, "Encrypt the leaseset(default false, inert)")
+	reduceIdle           = flag.Bool("reduce-idle", false, "Reduce tunnels on extended idle time")
+	closeIdle            = flag.Bool("close-idle", false, "Close tunnels on extended idle time")
+	closeIdleTime        = flag.Int("close-idle-time", 3000000, "Reduce tunnels after time(Ms)")
+	useCompression       = flag.Bool("use-compression", true, "Enable gzip compression")
+	reduceIdleTime       = flag.Int("reduce-idle-time", 2000000, "Reduce tunnels after time(Ms)")
+	reduceIdleQuantity   = flag.Int("reduce-idle-tunnels", 1, "Reduce tunnels to this level")
 )
 
 var addr string
@@ -54,7 +58,7 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 	srv := &http.Server{
 		ReadTimeout:  600 * time.Second,
 		WriteTimeout: 600 * time.Second,
-		Addr:         addr,
+		Addr:         ln.Addr().String(),
 	}
 	var err error
 	srv.Handler, err = NewHttpProxy(
@@ -71,17 +75,20 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		SetOutVariance(*outboundVariance),
 		SetUnpublished(*dontPublishLease),
 		SetReduceIdle(*reduceIdle),
+		SetCompression(*useCompression),
 		SetReduceIdleTime(uint(*reduceIdleTime)),
 		SetReduceIdleQuantity(uint(*reduceIdleQuantity)),
+		SetCloseIdle(*closeIdle),
+		SetCloseIdleTime(uint(*closeIdleTime)),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	ctrlsrv := &http.Server{
-		ReadTimeout:  600 * time.Second,
-		WriteTimeout: 600 * time.Second,
-		Addr:         addr,
+		ReadHeaderTimeout: 600 * time.Second,
+		WriteTimeout:      600 * time.Second,
+		Addr:              cln.Addr().String(),
 	}
 	ctrlsrv.Handler, err = NewSAMHTTPController(profiles, nil)
 

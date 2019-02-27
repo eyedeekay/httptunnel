@@ -25,7 +25,7 @@ func SetAddr(s ...string) func(*SAMHTTPProxy) error {
 				}
 				return fmt.Errorf("Invalid port; non-number")
 			}
-			return fmt.Errorf("Invalid address; use host:port %s", split)
+			return fmt.Errorf("Invalid address; use host:port %s ", split)
 		} else if len(s) == 2 {
 			if i, err := strconv.Atoi(s[1]); err == nil {
 				if i < 65536 {
@@ -238,6 +238,25 @@ func SetCompression(b bool) func(*SAMHTTPProxy) error {
 	}
 }
 
+//SetCloseIdle enables debugging messages
+func SetCloseIdle(b bool) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		c.closeIdle = b
+		return nil
+	}
+}
+
+//SetCloseIdleTime sets time to wait before the tunnel quantity is reduced
+func SetCloseIdleTime(u uint) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		if u > 300000 {
+			c.closeIdleTime = u
+			return nil
+		}
+		return fmt.Errorf("Invalid reduce idle time %v", u)
+	}
+}
+
 //return the inbound length as a string.
 func (c *SAMHTTPProxy) inlength() string {
 	return fmt.Sprintf("inbound.length=%d", c.inLength)
@@ -307,9 +326,20 @@ func (c *SAMHTTPProxy) reduceidlecount() string {
 	return fmt.Sprintf("i2cp.reduceIdleQuantity=%d", c.reduceIdleQuantity)
 }
 
-func (c *SAMHTTPProxy) compresion() string {
+func (c *SAMHTTPProxy) usecompresion() string {
 	if c.compression {
 		return "i2cp.gzip=true"
 	}
 	return "i2cp.gzip=false"
+}
+
+func (c *SAMHTTPProxy) closeonidle() string {
+	if c.reduceIdle {
+		return "i2cp.closeOnIdle=true"
+	}
+	return "i2cp.closeOnIdle=false"
+}
+
+func (c *SAMHTTPProxy) closeidletime() string {
+	return fmt.Sprintf("i2cp.closeIdleTime=%d", c.reduceIdleTime)
 }
