@@ -11,8 +11,7 @@ import (
 )
 
 import (
-	//. "github.com/eyedeekay/httptunnel"
-	. ".."
+	. "github.com/eyedeekay/httptunnel"
 	"github.com/eyedeekay/littleboss"
 )
 
