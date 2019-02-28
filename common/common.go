@@ -13,11 +13,10 @@ var hopHeaders = []string{
 	"Proxy-Authenticate",
 	"Proxy-Authorization",
 	"Proxy-Connection",
-	"Te", // canonicalized version of "TE"
 	"Trailers",
-	"Transfer-Encoding",
 	"Upgrade",
 	"X-Forwarded-For",
+	"X-Real-IP",
 }
 
 func Transfer(destination io.WriteCloser, source io.ReadCloser) {

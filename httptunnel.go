@@ -1,7 +1,9 @@
 package i2phttpproxy
 
 import (
-	//"crypto/tls"
+	"crypto/tls"
+	"fmt"
+	"golang.org/x/time/rate"
 	"io"
 	"log"
 	"net/http"
@@ -11,12 +13,15 @@ import (
 
 import (
 	"github.com/eyedeekay/goSam"
-    "github.com/eyedeekay/httptunnel/common"
+	"github.com/eyedeekay/httptunnel/common"
 )
 
 type SAMHTTPProxy struct {
 	gosam              *goSam.Client
-	Client             *http.Client
+	client             *http.Client
+	transport          *http.Transport
+	rateLimiter        *rate.Limiter
+	id                 int32
 	SamHost            string
 	SamPort            string
 	inLength           uint
@@ -38,25 +43,40 @@ type SAMHTTPProxy struct {
 
 	useOutProxy bool
 
-	debug bool
+	dialed bool
+	debug  bool
+}
+
+func (p *SAMHTTPProxy) freshTransport() *http.Transport {
+	t := http.Transport{
+		DialContext:           p.gosam.DialContext,
+		MaxConnsPerHost:       1,
+		MaxIdleConns:          0,
+		MaxIdleConnsPerHost:   1,
+		DisableKeepAlives:     false,
+		ResponseHeaderTimeout: time.Second * 600,
+		IdleConnTimeout:       time.Second * 300,
+		TLSNextProto:          make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+	}
+	return &t
 }
 
 func (p *SAMHTTPProxy) freshClient() *http.Client {
 	return &http.Client{
-		Transport: &http.Transport{
-			Dial:                  p.gosam.Dial,
-			MaxIdleConns:          0,
-			MaxIdleConnsPerHost:   3,
-			DisableKeepAlives:     false,
-			ResponseHeaderTimeout: time.Second * 600,
-			ExpectContinueTimeout: time.Second * 600,
-			IdleConnTimeout:       time.Second * 600,
-			//TLSNextProto:          make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
-			//TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
-		},
-		Timeout:       time.Second * 600,
+		Transport:     p.transport,
+		Timeout:       time.Second * 300,
 		CheckRedirect: nil,
 	}
+}
+
+func (p *SAMHTTPProxy) freshSAMClient() (*goSam.Client, error) {
+	return p.gosam.NewClient()
+}
+
+//return the combined host:port of the SAM bridge
+func (p *SAMHTTPProxy) samaddr() string {
+	return fmt.Sprintf("%s:%s", p.SamHost, p.SamPort)
 }
 
 func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
@@ -71,20 +91,19 @@ func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	log.Println(req.URL.Host)
-
 	if !strings.HasSuffix(req.URL.Host, ".i2p") {
+		log.Println(req.URL.Host)
 		msg := "Unsupported host " + req.URL.Host
 		http.Error(wr, msg, http.StatusBadRequest)
 		log.Println(msg)
 		return
 	}
 
-	if req.Method == http.MethodConnect {
-		p.connect(wr, req)
+	if req.Method != http.MethodConnect {
+		p.get(wr, req)
 		return
 	} else {
-		p.get(wr, req)
+		p.connect(wr, req)
 		return
 	}
 
@@ -93,7 +112,8 @@ func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 func (p *SAMHTTPProxy) get(wr http.ResponseWriter, req *http.Request) {
 	req.RequestURI = ""
 	proxycommon.DelHopHeaders(req.Header)
-	resp, err := p.Client.Do(req)
+	p.client = p.freshClient()
+	resp, err := p.client.Do(req)
 	if err != nil {
 		msg := "Proxy Error " + err.Error()
 		http.Error(wr, msg, http.StatusBadRequest)
@@ -129,6 +149,10 @@ func (p *SAMHTTPProxy) connect(wr http.ResponseWriter, req *http.Request) {
 	go proxycommon.Transfer(client_conn, dest_conn)
 }
 
+func (p *SAMHTTPProxy) Close() error {
+	return p.gosam.Close()
+}
+
 func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 	var handler SAMHTTPProxy
 	handler.SamHost = "127.0.0.1"
@@ -137,8 +161,8 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 	handler.outLength = 2
 	handler.inVariance = 0
 	handler.outVariance = 0
-	handler.inQuantity = 2
-	handler.outQuantity = 2
+	handler.inQuantity = 1
+	handler.outQuantity = 1
 	handler.inBackups = 1
 	handler.outBackups = 1
 	handler.dontPublishLease = true
@@ -149,6 +173,8 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 	handler.reduceIdleQuantity = 1
 	handler.useOutProxy = false
 	handler.compression = true
+	handler.id = 0
+	//handler.
 	for _, o := range opts {
 		if err := o(&handler); err != nil {
 			return nil, err
@@ -176,6 +202,7 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 	if err != nil {
 		return nil, err
 	}
-	handler.Client = handler.freshClient()
+	handler.transport = handler.freshTransport()
+	handler.client = handler.freshClient()
 	return &handler, nil
 }

@@ -6,6 +6,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
 	"time"
 )
@@ -23,12 +25,12 @@ var (
 	debugConnection      = flag.Bool("conn-debug", false, "Print connection debug info")
 	inboundTunnelLength  = flag.Int("in-tun-length", 2, "Tunnel Length(default 3)")
 	outboundTunnelLength = flag.Int("out-tun-length", 2, "Tunnel Length(default 3)")
-	inboundTunnels       = flag.Int("in-tunnels", 2, "Inbound Tunnel Count(default 8)")
-	outboundTunnels      = flag.Int("out-tunnels", 2, "Outbound Tunnel Count(default 8)")
-	inboundBackups       = flag.Int("in-backups", 1, "Inbound Backup Count(default 3)")
-	outboundBackups      = flag.Int("out-backups", 1, "Inbound Backup Count(default 3)")
-	inboundVariance      = flag.Int("in-variance", 0, "Inbound Backup Count(default 3)")
-	outboundVariance     = flag.Int("out-variance", 0, "Inbound Backup Count(default 3)")
+	inboundTunnels       = flag.Int("in-tunnels", 2, "Inbound Tunnel Count(default 2)")
+	outboundTunnels      = flag.Int("out-tunnels", 2, "Outbound Tunnel Count(default 2)")
+	inboundBackups       = flag.Int("in-backups", 1, "Inbound Backup Count(default 1)")
+	outboundBackups      = flag.Int("out-backups", 1, "Inbound Backup Count(default 1)")
+	inboundVariance      = flag.Int("in-variance", 0, "Inbound Backup Count(default 0)")
+	outboundVariance     = flag.Int("out-variance", 0, "Inbound Backup Count(default 0)")
 	dontPublishLease     = flag.Bool("no-publish", true, "Don't publish the leaseset(Client mode)")
 	encryptLease         = flag.Bool("encrypt-lease", false, "Encrypt the leaseset(default false, inert)")
 	reduceIdle           = flag.Bool("reduce-idle", false, "Reduce tunnels on extended idle time")
@@ -52,11 +54,12 @@ func main() {
 
 func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 	flag.Parse()
+
 	profiles := strings.Split(*watchProfiles, ",")
 
 	srv := &http.Server{
 		ReadTimeout:  600 * time.Second,
-		WriteTimeout: 600 * time.Second,
+		WriteTimeout: 10 * time.Second,
 		Addr:         ln.Addr().String(),
 	}
 	var err error
@@ -90,6 +93,19 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		Addr:              cln.Addr().String(),
 	}
 	ctrlsrv.Handler, err = NewSAMHTTPController(profiles, nil)
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	go func() {
+		for sig := range c {
+			if sig == os.Interrupt {
+				srv.Handler.(*SAMHTTPProxy).Close()
+				srv.Shutdown(ctx)
+				ctrlsrv.Shutdown(ctx)
+			}
+		}
+	}()
 
 	go func() {
 		log.Println("Starting control server on", cln.Addr())
