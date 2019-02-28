@@ -24,6 +24,8 @@ type SAMHTTPProxy struct {
 	id                 int32
 	SamHost            string
 	SamPort            string
+	controlHost        string
+	controlPort        string
 	inLength           uint
 	outLength          uint
 	inVariance         int
@@ -92,7 +94,10 @@ func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	}
 
 	if !strings.HasSuffix(req.URL.Host, ".i2p") {
-		log.Println(req.URL.Host)
+		if req.URL.Host == p.controlHost+":"+p.controlPort {
+			p.reset(wr, req)
+			return
+		}
 		msg := "Unsupported host " + req.URL.Host
 		http.Error(wr, msg, http.StatusBadRequest)
 		log.Println(msg)
@@ -107,6 +112,22 @@ func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+}
+
+func (p *SAMHTTPProxy) reset(wr http.ResponseWriter, req *http.Request) {
+	log.Println("Validating control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
+	if strings.SplitN(req.RemoteAddr, ":", 2)[0] == p.controlHost {
+		log.Println("Validated control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err == nil {
+			wr.Header().Set("Content-Type", "text/html; charset=utf-8")
+			wr.Header().Set("Access-Control-Allow-Origin", "*")
+			wr.WriteHeader(resp.StatusCode)
+			io.Copy(wr, resp.Body)
+			return
+		}
+	}
 }
 
 func (p *SAMHTTPProxy) get(wr http.ResponseWriter, req *http.Request) {
@@ -157,6 +178,8 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 	var handler SAMHTTPProxy
 	handler.SamHost = "127.0.0.1"
 	handler.SamPort = "7656"
+	handler.controlHost = "127.0.0.1"
+	handler.controlPort = "7951"
 	handler.inLength = 2
 	handler.outLength = 2
 	handler.inVariance = 0

@@ -46,6 +46,11 @@ func (p *SAMHTTPController) restoreProfiles() error {
 
 func (p *SAMHTTPController) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	var err error
+	wr.Header().Set("Content-Type", "text/html; charset=utf-8")
+	wr.Header().Set("Access-Control-Allow-Origin", "*")
+	wr.WriteHeader(http.StatusOK)
+	wr.Write([]byte("200 - Restart from " + req.Header.Get("Origin") + "OK!"))
+	log.Println("attempting restart")
 	if runtime.GOOS == "windows" {
 		err = p.windowsRestart()
 	} else {
@@ -58,8 +63,6 @@ func (p *SAMHTTPController) ServeHTTP(wr http.ResponseWriter, req *http.Request)
 	if err != nil {
 		log.Fatal(err)
 	}
-	wr.WriteHeader(http.StatusOK)
-	wr.Write([]byte("200 - Restart OK!"))
 }
 
 func unixRestart() error {

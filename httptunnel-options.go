@@ -42,12 +42,68 @@ func SetAddr(s ...string) func(*SAMHTTPProxy) error {
 	}
 }
 
+//SetControlAddr sets a clients's address in the form host:port or host, port
+func SetControlAddr(s ...string) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		if len(s) == 1 {
+			split := strings.SplitN(s[0], ":", 2)
+			if len(split) == 2 {
+				if i, err := strconv.Atoi(split[1]); err == nil {
+					if i < 65536 {
+						c.controlHost = split[0]
+						c.controlPort = split[1]
+						return nil
+					}
+					return fmt.Errorf("Invalid port")
+				}
+				return fmt.Errorf("Invalid port; non-number")
+			}
+			return fmt.Errorf("Invalid address; use host:port %s ", split)
+		} else if len(s) == 2 {
+			if i, err := strconv.Atoi(s[1]); err == nil {
+				if i < 65536 {
+					c.controlHost = s[0]
+					c.controlPort = s[1]
+					return nil
+				}
+				return fmt.Errorf("Invalid port")
+			}
+			return fmt.Errorf("Invalid port; non-number")
+		} else {
+			return fmt.Errorf("Invalid address")
+		}
+	}
+}
+
 //SetAddrMixed sets a clients's address in the form host, port(int)
 func SetAddrMixed(s string, i int) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if i < 65536 && i > 0 {
 			c.SamHost = s
 			c.SamPort = strconv.Itoa(i)
+			return nil
+		}
+		return fmt.Errorf("Invalid port")
+	}
+}
+
+//SetContrlHost sets the host of the client's Proxy controller
+func SetControlHost(s string) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		c.controlHost = s
+		return nil
+	}
+}
+
+//SetContrlPort sets the host of the client's Proxy controller
+func SetControlPort(s string) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		port, err := strconv.Atoi(s)
+		if err != nil {
+			return fmt.Errorf("Invalid port; non-number")
+		}
+		if port < 65536 && port > -1 {
+			c.controlPort = s
 			return nil
 		}
 		return fmt.Errorf("Invalid port")

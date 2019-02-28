@@ -13,7 +13,8 @@ import (
 )
 
 import (
-	. "github.com/eyedeekay/httptunnel"
+	//. "github.com/eyedeekay/httptunnel"
+	. ".."
 	"github.com/eyedeekay/littleboss"
 )
 
@@ -66,6 +67,7 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 	srv.Handler, err = NewHttpProxy(
 		SetHost(*samHostString),
 		SetPort(*samPortString),
+		SetControlAddr(cln.Addr().String()),
 		SetDebug(*debugConnection),
 		SetInLength(uint(*inboundTunnelLength)),
 		SetOutLength(uint(*outboundTunnelLength)),
