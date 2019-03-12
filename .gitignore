@@ -15,4 +15,4 @@ httpproxy-*
 *.out
 
 README.md.asc
-doc/doc
+docs/doc
