@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 11),
                dh-golang,
                golang-any,
                golang-golang-x-time-dev,
-               golang-crawshaw-littleboss
+               golang-crawshaw-littleboss-dev
 Standards-Version: 4.2.1
 Homepage: https://github.com/eyedeekay/httptunnel
 Vcs-Browser: https://salsa.debian.org/go-team/packages/httptunnel
