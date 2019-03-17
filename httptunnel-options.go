@@ -95,6 +95,14 @@ func SetControlHost(s string) func(*SAMHTTPProxy) error {
 	}
 }
 
+//SetKeysPath sets the path to the key save files
+func SetKeysPath(s string) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		c.keyspath = s
+		return nil
+	}
+}
+
 //SetContrlPort sets the host of the client's Proxy controller
 func SetControlPort(s string) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {

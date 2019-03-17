@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"golang.org/x/time/rate"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -17,7 +19,7 @@ import (
 )
 
 type SAMHTTPProxy struct {
-	gosam              *goSam.Client
+	goSam              *goSam.Client
 	client             *http.Client
 	transport          *http.Transport
 	rateLimiter        *rate.Limiter
@@ -26,6 +28,8 @@ type SAMHTTPProxy struct {
 	SamPort            string
 	controlHost        string
 	controlPort        string
+	destination        string
+	keyspath           string
 	inLength           uint
 	outLength          uint
 	inVariance         int
@@ -51,7 +55,7 @@ type SAMHTTPProxy struct {
 
 func (p *SAMHTTPProxy) freshTransport() *http.Transport {
 	t := http.Transport{
-		DialContext:           p.gosam.DialContext,
+		DialContext:           p.goSam.DialContext,
 		MaxConnsPerHost:       1,
 		MaxIdleConns:          0,
 		MaxIdleConnsPerHost:   1,
@@ -73,7 +77,7 @@ func (p *SAMHTTPProxy) freshClient() *http.Client {
 }
 
 func (p *SAMHTTPProxy) freshSAMClient() (*goSam.Client, error) {
-	return p.gosam.NewClient()
+	return p.goSam.NewClient()
 }
 
 //return the combined host:port of the SAM bridge
@@ -83,7 +87,7 @@ func (p *SAMHTTPProxy) samaddr() string {
 
 func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	log.Println(req.RemoteAddr, " ", req.Method, " ", req.URL)
-
+	p.Save()
 	if req.URL.Scheme != "http" && req.URL.Scheme != "https" {
 		if !(req.Method == http.MethodConnect) {
 			msg := "Unsupported protocol scheme " + req.URL.Scheme
@@ -150,7 +154,7 @@ func (p *SAMHTTPProxy) get(wr http.ResponseWriter, req *http.Request) {
 
 func (p *SAMHTTPProxy) connect(wr http.ResponseWriter, req *http.Request) {
 	log.Println("CONNECT via i2p to", req.URL.Host)
-	dest_conn, err := p.gosam.Dial("tcp", req.URL.Host)
+	dest_conn, err := p.goSam.Dial("tcp", req.URL.Host)
 	if err != nil {
 		http.Error(wr, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -171,7 +175,27 @@ func (p *SAMHTTPProxy) connect(wr http.ResponseWriter, req *http.Request) {
 }
 
 func (p *SAMHTTPProxy) Close() error {
-	return p.gosam.Close()
+	return p.goSam.Close()
+}
+
+func (p *SAMHTTPProxy) Save() string {
+	if p.keyspath != "invalid.tunkey" {
+		if _, err := os.Stat(p.keyspath); os.IsNotExist(err) {
+			if p.goSam != nil {
+				if p.goSam.Destination() != "" {
+					ioutil.WriteFile(p.keyspath, []byte(p.goSam.Destination()), 0644)
+					p.destination = p.goSam.Destination()
+					return p.goSam.Destination()
+				}
+			}
+		} else {
+			if keys, err := ioutil.ReadFile(p.keyspath); err == nil {
+				p.destination = string(keys)
+				return string(keys)
+			}
+		}
+	}
+	return ""
 }
 
 func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
@@ -197,14 +221,16 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 	handler.useOutProxy = false
 	handler.compression = true
 	handler.id = 0
-	//handler.
+	handler.keyspath = "invalid.tunkey"
+	handler.destination = ""
 	for _, o := range opts {
 		if err := o(&handler); err != nil {
 			return nil, err
 		}
 	}
 	var err error
-	handler.gosam, err = goSam.NewClientFromOptions(
+	handler.destination = handler.Save()
+	handler.goSam, err = goSam.NewClientFromOptions(
 		goSam.SetHost(handler.SamHost),
 		goSam.SetPort(handler.SamPort),
 		goSam.SetUnpublished(handler.dontPublishLease),
@@ -221,6 +247,7 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 		goSam.SetCloseIdleTime(handler.closeIdleTime),
 		goSam.SetCompression(handler.compression),
 		goSam.SetDebug(handler.debug),
+		goSam.SetLocalDestination(handler.destination),
 	)
 	if err != nil {
 		return nil, err

@@ -12,7 +12,7 @@ import (
 
 // tutorial line 48
 import (
-	"github.com/eyedeekay/goSam"
+	"github.com/eyedeekay/gosam"
 )
 
 func copyHeader(dst, src http.Header) {
@@ -50,7 +50,7 @@ func delHopHeaders(header http.Header) {
 
 // tutorial line 55
 type Proxy struct {
-	Sam    *goSam.Client
+	Sam    *gosam.Client
 	Client *http.Client
 }
 
@@ -112,18 +112,18 @@ func main() {
 	flag.Parse()
 
 	// tutorial line 71, 222
-	sam, err := goSam.NewClientFromOptions(
-		goSam.SetHost("127.0.0.1"),
-		goSam.SetPort("7656"),
-		goSam.SetUnpublished(true),
-		goSam.SetInLength(uint(2)),
-		goSam.SetOutLength(uint(2)),
-		goSam.SetInQuantity(uint(1)),
-		goSam.SetOutQuantity(uint(1)),
-		goSam.SetInBackups(uint(1)),
-		goSam.SetOutBackups(uint(1)),
-		goSam.SetReduceIdle(true),
-		goSam.SetReduceIdleTime(uint(2000000)),
+	sam, err := gosam.NewClientFromOptions(
+		gosam.SetHost("127.0.0.1"),
+		gosam.SetPort("7656"),
+		gosam.SetUnpublished(true),
+		gosam.SetInLength(uint(2)),
+		gosam.SetOutLength(uint(2)),
+		gosam.SetInQuantity(uint(1)),
+		gosam.SetOutQuantity(uint(1)),
+		gosam.SetInBackups(uint(1)),
+		gosam.SetOutBackups(uint(1)),
+		gosam.SetReduceIdle(true),
+		gosam.SetReduceIdleTime(uint(2000000)),
 	)
 	if err != nil {
 		log.Fatal(err)

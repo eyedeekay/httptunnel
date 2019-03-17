@@ -14,7 +14,7 @@ import (
 
 import (
 	. "github.com/eyedeekay/httptunnel"
-	"github.com/eyedeekay/littleboss"
+	"crawshaw.io/littleboss"
 )
 
 var (
@@ -22,6 +22,7 @@ var (
 	samHostString        = flag.String("bridge-host", "127.0.0.1", "host: of the SAM bridge")
 	samPortString        = flag.String("bridge-port", "7656", ":port of the SAM bridge")
 	watchProfiles        = flag.String("watch-profiles", "~/.mozilla/.firefox.profile.i2p.default/user.js,~/.mozilla/.firefox.profile.i2p.debug/user.js", "Monitor and control these Firefox profiles")
+	destfile             = flag.String("dest-file", "invalid.tunkey", "Use a long-term destination key")
 	debugConnection      = flag.Bool("conn-debug", false, "Print connection debug info")
 	inboundTunnelLength  = flag.Int("in-tun-length", 2, "Tunnel Length(default 3)")
 	outboundTunnelLength = flag.Int("out-tun-length", 2, "Tunnel Length(default 3)")
@@ -83,6 +84,7 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		SetReduceIdleQuantity(uint(*reduceIdleQuantity)),
 		SetCloseIdle(*closeIdle),
 		SetCloseIdleTime(uint(*closeIdleTime)),
+		SetKeysPath(*destfile),
 	)
 	if err != nil {
 		log.Fatal(err)
