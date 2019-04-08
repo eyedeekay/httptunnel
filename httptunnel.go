@@ -151,10 +151,10 @@ func (p *SAMHTTPProxy) get(wr http.ResponseWriter, req *http.Request) {
 	resp, err := p.client.Do(req)
 	if err != nil {
 		msg := "Proxy Error " + err.Error()
-        if ! Quiet{
-            http.Error(wr, msg, http.StatusBadRequest)
+		if !Quiet {
+			http.Error(wr, msg, http.StatusBadRequest)
 		}
-        plog(msg)
+		plog(msg)
 		return
 	}
 	defer resp.Body.Close()
@@ -168,25 +168,25 @@ func (p *SAMHTTPProxy) connect(wr http.ResponseWriter, req *http.Request) {
 	plog("CONNECT via i2p to", req.URL.Host)
 	dest_conn, err := p.goSam.Dial("tcp", req.URL.Host)
 	if err != nil {
-        if ! Quiet {
-            http.Error(wr, err.Error(), http.StatusServiceUnavailable)
+		if !Quiet {
+			http.Error(wr, err.Error(), http.StatusServiceUnavailable)
 		}
-        return
+		return
 	}
 	wr.WriteHeader(http.StatusOK)
 	hijacker, ok := wr.(http.Hijacker)
 	if !ok {
-        if !Quiet {
-		http.Error(wr, "Hijacking not supported", http.StatusInternalServerError)
+		if !Quiet {
+			http.Error(wr, "Hijacking not supported", http.StatusInternalServerError)
 		}
-        return
+		return
 	}
 	client_conn, _, err := hijacker.Hijack()
 	if err != nil {
-        if !Quiet{
-		http.Error(wr, err.Error(), http.StatusServiceUnavailable)
+		if !Quiet {
+			http.Error(wr, err.Error(), http.StatusServiceUnavailable)
 		}
-        return
+		return
 	}
 	go proxycommon.Transfer(dest_conn, client_conn)
 	go proxycommon.Transfer(client_conn, dest_conn)

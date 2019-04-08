@@ -51,14 +51,14 @@ var addr string
 
 func main() {
 	lb := littleboss.New(*tunnelName)
-    proxyaddr := "127.0.0.1:7950"
-    controladdr := "127.0.0.1:7951"
-    for _, flag := range os.Args {
-        if flag == "-run-command" {
-            proxyaddr = "127.0.0.1:0"
-            controladdr = "127.0.0.1:0"
-        }
-    }
+	proxyaddr := "127.0.0.1:7950"
+	controladdr := "127.0.0.1:7951"
+	for _, flag := range os.Args {
+		if flag == "-run-command" {
+			proxyaddr = "127.0.0.1:0"
+			controladdr = "127.0.0.1:0"
+		}
+	}
 	ln := lb.Listener("proxy-addr", "tcp", proxyaddr, "The address of the proxy")
 	cln := lb.Listener("control-addr", "tcp", controladdr, "The address of the controller")
 	lb.Run(func(ctx context.Context) {
@@ -163,7 +163,7 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		log.Println("Launching ", *runCommand, "with proxy http://"+ln.Addr().String())
 		cmd := exec.Command(*runCommand, strings.Split(*runArguments, " ")...)
 		cmd.Stdout = os.Stdout
-        cmd.Stdin = os.Stdin
+		cmd.Stdin = os.Stdin
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
 		if err != nil {
