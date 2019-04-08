@@ -7,15 +7,15 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
-    "os/exec"
 	"strings"
 	"time"
 )
 
 import (
-	. "github.com/eyedeekay/httptunnel"
 	"crawshaw.io/littleboss"
+	. "github.com/eyedeekay/httptunnel"
 )
 
 var (
@@ -41,10 +41,10 @@ var (
 	useCompression       = flag.Bool("use-compression", true, "Enable gzip compression")
 	reduceIdleTime       = flag.Int("reduce-idle-time", 2000000, "Reduce tunnels after time(Ms)")
 	reduceIdleQuantity   = flag.Int("reduce-idle-tunnels", 1, "Reduce tunnels to this level")
-    runCommand           = flag.String("run-command", "", "Execute command using the *_PROXY environment variables")
-    runArguments         = flag.String("run-arguments", "", "Pass arguments to run-command")
-    suppressLifetime     = flag.Bool("suppress-lifetime-output", false, "Suppress \"Tunnel lifetime\" output")
-    runQuiet             = flag.Bool("run-quiet", false, "Suppress all non-command output")
+	runCommand           = flag.String("run-command", "", "Execute command using the *_PROXY environment variables")
+	runArguments         = flag.String("run-arguments", "", "Pass arguments to run-command")
+	suppressLifetime     = flag.Bool("suppress-lifetime-output", false, "Suppress \"Tunnel lifetime\" output")
+	runQuiet             = flag.Bool("run-quiet", false, "Suppress all non-command output")
 )
 
 var addr string
@@ -60,11 +60,11 @@ func main() {
 
 func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 	flag.Parse()
-    if *runCommand != "" {
-        *suppressLifetime = true
-        *runQuiet = true
-        *debugConnection = false
-    }
+	if *runCommand != "" {
+		*suppressLifetime = true
+		*runQuiet = true
+		*debugConnection = false
+	}
 	profiles := strings.Split(*watchProfiles, ",")
 
 	srv := &http.Server{
@@ -95,7 +95,7 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		SetCloseIdleTime(uint(*closeIdleTime)),
 		SetKeysPath(*destfile),
 	)
-    Quiet = *runQuiet
+	Quiet = *runQuiet
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -144,36 +144,36 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 
 	go counter()
 
-    if *runCommand != "" {
-        os.Setenv("http_proxy","http://"+ln.Addr().String())
-        os.Setenv("https_proxy","http://"+ln.Addr().String())
-        os.Setenv("ftp_proxy","http://"+ln.Addr().String())
-        os.Setenv("HTTP_proxy","http://"+ln.Addr().String())
-        os.Setenv("HTTPS_proxy","http://"+ln.Addr().String())
-        os.Setenv("FTP_proxy","http://"+ln.Addr().String())
+	if *runCommand != "" {
+		os.Setenv("http_proxy", "http://"+ln.Addr().String())
+		os.Setenv("https_proxy", "http://"+ln.Addr().String())
+		os.Setenv("ftp_proxy", "http://"+ln.Addr().String())
+		os.Setenv("HTTP_proxy", "http://"+ln.Addr().String())
+		os.Setenv("HTTPS_proxy", "http://"+ln.Addr().String())
+		os.Setenv("FTP_proxy", "http://"+ln.Addr().String())
 
-        log.Println("Launching ", *runCommand, "with proxy http://" + ln.Addr().String())
-        cmd := exec.Command(*runCommand, strings.Split(*runArguments, " ")...)
-        cmd.Stdout = os.Stdout
-        cmd.Stderr = os.Stderr
-        err := cmd.Run()
-        if err != nil {
-            log.Fatalf("cmd.Run() failed with %s\n", err)
-        }
-        log.Println("Finished running the command.")
-        return
-    }
+		log.Println("Launching ", *runCommand, "with proxy http://"+ln.Addr().String())
+		cmd := exec.Command(*runCommand, strings.Split(*runArguments, " ")...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			log.Fatalf("cmd.Run() failed with %s\n", err)
+		}
+		log.Println("Finished running the command.")
+		return
+	}
 
 	<-ctx.Done()
 }
 
 func counter() {
 	var x int
-    for {
-        if ! *suppressLifetime {
-            log.Println("Identity is", x, "minute(s) old")
-            time.Sleep(1 * time.Minute)
-            x++
-        }
-    }
+	for {
+		if !*suppressLifetime {
+			log.Println("Identity is", x, "minute(s) old")
+			time.Sleep(1 * time.Minute)
+			x++
+		}
+	}
 }

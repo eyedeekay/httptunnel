@@ -55,10 +55,10 @@ type SAMHTTPProxy struct {
 
 var Quiet bool
 
-func plog(in ...interface{}){
-    if !Quiet {
-        log.Println(in)
-    }
+func plog(in ...interface{}) {
+	if !Quiet {
+		log.Println(in)
+	}
 }
 
 func (p *SAMHTTPProxy) freshTransport() *http.Transport {
@@ -111,10 +111,10 @@ func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 			return
 		}
 		msg := "Unsupported host " + req.URL.Host
-        if !Quiet {
-            http.Error(wr, msg, http.StatusBadRequest)
+		if !Quiet {
+			http.Error(wr, msg, http.StatusBadRequest)
 		}
-        plog(msg)
+		plog(msg)
 		return
 	}
 
