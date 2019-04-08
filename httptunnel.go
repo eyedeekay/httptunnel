@@ -53,6 +53,14 @@ type SAMHTTPProxy struct {
 	debug  bool
 }
 
+var Quiet bool
+
+func plog(in ...interface{}){
+    if !Quiet {
+        log.Println(in)
+    }
+}
+
 func (p *SAMHTTPProxy) freshTransport() *http.Transport {
 	t := http.Transport{
 		DialContext:           p.goSam.DialContext,
@@ -86,13 +94,13 @@ func (p *SAMHTTPProxy) samaddr() string {
 }
 
 func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
-	log.Println(req.RemoteAddr, " ", req.Method, " ", req.URL)
+	plog(req.RemoteAddr, " ", req.Method, " ", req.URL)
 	p.Save()
 	if req.URL.Scheme != "http" && req.URL.Scheme != "https" {
 		if !(req.Method == http.MethodConnect) {
 			msg := "Unsupported protocol scheme " + req.URL.Scheme
 			http.Error(wr, msg, http.StatusBadRequest)
-			log.Println(msg)
+			plog(msg)
 			return
 		}
 	}
@@ -103,8 +111,10 @@ func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 			return
 		}
 		msg := "Unsupported host " + req.URL.Host
-		http.Error(wr, msg, http.StatusBadRequest)
-		log.Println(msg)
+        if !Quiet {
+            http.Error(wr, msg, http.StatusBadRequest)
+		}
+        plog(msg)
 		return
 	}
 
@@ -119,9 +129,9 @@ func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 }
 
 func (p *SAMHTTPProxy) reset(wr http.ResponseWriter, req *http.Request) {
-	log.Println("Validating control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
+	plog("Validating control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
 	if strings.SplitN(req.RemoteAddr, ":", 2)[0] == p.controlHost {
-		log.Println("Validated control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
+		plog("Validated control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err == nil {
@@ -142,7 +152,7 @@ func (p *SAMHTTPProxy) get(wr http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		msg := "Proxy Error " + err.Error()
 		http.Error(wr, msg, http.StatusBadRequest)
-		log.Println(msg)
+		plog(msg)
 		return
 	}
 	defer resp.Body.Close()
@@ -153,7 +163,7 @@ func (p *SAMHTTPProxy) get(wr http.ResponseWriter, req *http.Request) {
 }
 
 func (p *SAMHTTPProxy) connect(wr http.ResponseWriter, req *http.Request) {
-	log.Println("CONNECT via i2p to", req.URL.Host)
+	plog("CONNECT via i2p to", req.URL.Host)
 	dest_conn, err := p.goSam.Dial("tcp", req.URL.Host)
 	if err != nil {
 		http.Error(wr, err.Error(), http.StatusServiceUnavailable)
