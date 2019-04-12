@@ -1,0 +1,4 @@
+#! /usr/bin/env sh
+
+./httpproxy-64 -run-command chromium -run-arguments \
+    "--incognito --user-data-dir=$HOME/.i2p-chromium-incognito --safebrowsing-disable-download-protection --disable-client-side-phishing-detection http://i2p-projekt.i2p"
