@@ -84,6 +84,7 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 	srv.Handler, err = NewHttpProxy(
 		SetHost(*samHostString),
 		SetPort(*samPortString),
+		SetProxyAddr(ln.Addr().String()),
 		SetControlAddr(cln.Addr().String()),
 		SetDebug(*debugConnection),
 		SetInLength(uint(*inboundTunnelLength)),
@@ -156,9 +157,11 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		os.Setenv("http_proxy", "http://"+ln.Addr().String())
 		os.Setenv("https_proxy", "http://"+ln.Addr().String())
 		os.Setenv("ftp_proxy", "http://"+ln.Addr().String())
-		os.Setenv("HTTP_proxy", "http://"+ln.Addr().String())
-		os.Setenv("HTTPS_proxy", "http://"+ln.Addr().String())
-		os.Setenv("FTP_proxy", "http://"+ln.Addr().String())
+		os.Setenv("all_proxy", "http://"+ln.Addr().String())
+		os.Setenv("HTTP_PROXY", "http://"+ln.Addr().String())
+		os.Setenv("HTTPS_PROXY", "http://"+ln.Addr().String())
+		os.Setenv("FTP_PROXY", "http://"+ln.Addr().String())
+		os.Setenv("ALL_PROXY", "http://"+ln.Addr().String())
 
 		log.Println("Launching ", *runCommand, "with proxy http://"+ln.Addr().String())
 		cmd := exec.Command(*runCommand, strings.Split(*runArguments, " ")...)

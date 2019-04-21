@@ -7,8 +7,10 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -24,6 +26,8 @@ type SAMHTTPProxy struct {
 	transport          *http.Transport
 	rateLimiter        *rate.Limiter
 	id                 int32
+	proxyHost          string
+	proxyPort          string
 	SamHost            string
 	SamPort            string
 	controlHost        string
@@ -59,6 +63,71 @@ func plog(in ...interface{}) {
 	if !Quiet {
 		log.Println(in)
 	}
+}
+
+func (p *SAMHTTPProxy) Cleanup() {
+	p.Close()
+}
+
+func (p *SAMHTTPProxy) Print() string {
+	return p.goSam.Print()
+}
+
+func (p *SAMHTTPProxy) Search(search string) string {
+	terms := strings.Split(search, ",")
+	if search == "" {
+		return p.Print()
+	}
+	for _, value := range terms {
+		if !strings.Contains(p.Print(), value) {
+			return ""
+		}
+	}
+	return p.Print()
+}
+
+func (p *SAMHTTPProxy) Target() string {
+	return p.proxyHost + ":" + p.proxyPort
+}
+
+func (p *SAMHTTPProxy) ID() string {
+	return strconv.Itoa(int(p.id))
+}
+
+func (p *SAMHTTPProxy) Base32() string {
+	return p.goSam.Base32()
+}
+
+func (p *SAMHTTPProxy) Base64() string {
+	return p.goSam.Base64()
+}
+
+func (p *SAMHTTPProxy) Serve() error {
+	ln, err := net.Listen("tcp", p.proxyHost+":"+p.proxyPort)
+	if err != nil {
+		return err
+	}
+	srv := &http.Server{
+		ReadTimeout:  600 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		Addr:         ln.Addr().String(),
+	}
+	srv.Handler = p
+	if err != nil {
+		return err
+	}
+	log.Println("Starting proxy server on", ln.Addr())
+	if err := srv.Serve(ln); err != nil {
+		if err == http.ErrServerClosed {
+			return err
+		}
+	}
+	log.Println("Stopping proxy server on", ln.Addr())
+	return nil
+}
+
+func (p *SAMHTTPProxy) Close() error {
+	return p.goSam.Close()
 }
 
 func (p *SAMHTTPProxy) freshTransport() *http.Transport {
@@ -192,10 +261,6 @@ func (p *SAMHTTPProxy) connect(wr http.ResponseWriter, req *http.Request) {
 	go proxycommon.Transfer(client_conn, dest_conn)
 }
 
-func (p *SAMHTTPProxy) Close() error {
-	return p.goSam.Close()
-}
-
 func (p *SAMHTTPProxy) Save() string {
 	if p.keyspath != "invalid.tunkey" {
 		if _, err := os.Stat(p.keyspath); os.IsNotExist(err) {
@@ -222,6 +287,8 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 	handler.SamPort = "7656"
 	handler.controlHost = "127.0.0.1"
 	handler.controlPort = "7951"
+	handler.proxyHost = "127.0.0.1"
+	handler.proxyPort = "7950"
 	handler.inLength = 2
 	handler.outLength = 2
 	handler.inVariance = 0
