@@ -12,9 +12,9 @@ type Option func(*SAMHTTPProxy) error
 //SetName sets a clients's address in the form host:port or host, port
 func SetName(s string) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-        c.tunName = s
-        return nil
-    }
+		c.tunName = s
+		return nil
+	}
 }
 
 //SetAddr sets a clients's address in the form host:port or host, port

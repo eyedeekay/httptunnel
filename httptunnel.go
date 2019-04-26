@@ -17,7 +17,7 @@ import (
 import (
 	"github.com/eyedeekay/goSam"
 	"github.com/eyedeekay/httptunnel/common"
-    "github.com/eyedeekay/sam-forwarder/i2pkeys"
+	"github.com/eyedeekay/sam-forwarder/i2pkeys"
 )
 
 type SAMHTTPProxy struct {
@@ -25,8 +25,8 @@ type SAMHTTPProxy struct {
 	client             *http.Client
 	transport          *http.Transport
 	rateLimiter        *rate.Limiter
-    tunName            string
-    sigType            string
+	tunName            string
+	sigType            string
 	proxyHost          string
 	proxyPort          string
 	SamHost            string
@@ -67,7 +67,7 @@ func plog(in ...interface{}) {
 }
 
 func (f *SAMHTTPProxy) print() []string {
-    return strings.Split(f.Print(), " ")
+	return strings.Split(f.Print(), " ")
 }
 
 func (f *SAMHTTPProxy) Props() map[string]string {
@@ -78,7 +78,6 @@ func (f *SAMHTTPProxy) Props() map[string]string {
 	}
 	return r
 }
-
 
 func (p *SAMHTTPProxy) Cleanup() {
 	p.Close()
