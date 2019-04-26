@@ -10,7 +10,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -18,6 +17,7 @@ import (
 import (
 	"github.com/eyedeekay/goSam"
 	"github.com/eyedeekay/httptunnel/common"
+    "github.com/eyedeekay/sam-forwarder/i2pkeys"
 )
 
 type SAMHTTPProxy struct {
@@ -25,7 +25,8 @@ type SAMHTTPProxy struct {
 	client             *http.Client
 	transport          *http.Transport
 	rateLimiter        *rate.Limiter
-	id                 int32
+    tunName            string
+    sigType            string
 	proxyHost          string
 	proxyPort          string
 	SamHost            string
@@ -65,6 +66,20 @@ func plog(in ...interface{}) {
 	}
 }
 
+func (f *SAMHTTPProxy) print() []string {
+    return strings.Split(f.Print(), " ")
+}
+
+func (f *SAMHTTPProxy) Props() map[string]string {
+	var r map[string]string
+	for _, prop := range f.print() {
+		k, v := sfi2pkeys.Prop(prop)
+		r[k] = v
+	}
+	return r
+}
+
+
 func (p *SAMHTTPProxy) Cleanup() {
 	p.Close()
 }
@@ -88,10 +103,6 @@ func (p *SAMHTTPProxy) Search(search string) string {
 
 func (p *SAMHTTPProxy) Target() string {
 	return p.proxyHost + ":" + p.proxyPort
-}
-
-func (p *SAMHTTPProxy) ID() string {
-	return strconv.Itoa(int(p.id))
 }
 
 func (p *SAMHTTPProxy) Base32() string {
@@ -305,7 +316,7 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 	handler.reduceIdleQuantity = 1
 	handler.useOutProxy = false
 	handler.compression = true
-	handler.id = 0
+	handler.tunName = "0"
 	handler.keyspath = "invalid.tunkey"
 	handler.destination = ""
 	for _, o := range opts {
