@@ -2,7 +2,7 @@ package i2phttpproxy
 
 import (
 	"fmt"
-    "log"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -356,7 +356,7 @@ func SetCloseIdle(b bool) func(*SAMHTTPProxy) error {
 func SetCloseIdleTime(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		log.Println("TEST CLOSE", u, (u > 299999))
-        if u > 299999 {
+		if u > 299999 {
 			c.closeIdleTime = u
 			return nil
 		}

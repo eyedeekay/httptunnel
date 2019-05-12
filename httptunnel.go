@@ -71,11 +71,11 @@ func (f *SAMHTTPProxy) print() []string {
 }
 
 func (f *SAMHTTPProxy) GetType() string {
-    return "httpclient"
+	return "httpclient"
 }
 
 func (f *SAMHTTPProxy) ID() string {
-    return f.tunName
+	return f.tunName
 }
 
 func (f *SAMHTTPProxy) Props() map[string]string {
