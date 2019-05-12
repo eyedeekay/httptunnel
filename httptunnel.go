@@ -62,7 +62,7 @@ var Quiet bool
 
 func plog(in ...interface{}) {
 	if !Quiet {
-		log.Println(in)
+		log.Println(in...)
 	}
 }
 
@@ -70,8 +70,16 @@ func (f *SAMHTTPProxy) print() []string {
 	return strings.Split(f.Print(), " ")
 }
 
+func (f *SAMHTTPProxy) GetType() string {
+    return "httpclient"
+}
+
+func (f *SAMHTTPProxy) ID() string {
+    return f.tunName
+}
+
 func (f *SAMHTTPProxy) Props() map[string]string {
-	var r map[string]string
+	r := make(map[string]string)
 	for _, prop := range f.print() {
 		k, v := sfi2pkeys.Prop(prop)
 		r[k] = v

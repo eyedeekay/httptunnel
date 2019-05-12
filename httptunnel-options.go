@@ -2,6 +2,7 @@ package i2phttpproxy
 
 import (
 	"fmt"
+    "log"
 	"strconv"
 	"strings"
 )
@@ -316,7 +317,7 @@ func SetReduceIdle(b bool) func(*SAMHTTPProxy) error {
 //SetReduceIdleTime sets time to wait before the tunnel quantity is reduced
 func SetReduceIdleTime(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		if u > 300000 {
+		if u > 299999 {
 			c.reduceIdleTime = u
 			return nil
 		}
@@ -354,11 +355,12 @@ func SetCloseIdle(b bool) func(*SAMHTTPProxy) error {
 //SetCloseIdleTime sets time to wait before the tunnel quantity is reduced
 func SetCloseIdleTime(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		if u > 300000 {
+		log.Println("TEST CLOSE", u, (u > 299999))
+        if u > 299999 {
 			c.closeIdleTime = u
 			return nil
 		}
-		return fmt.Errorf("Invalid reduce idle time %v", u)
+		return fmt.Errorf("Invalid close idle time %v", u)
 	}
 }
 
