@@ -18,6 +18,7 @@ import (
 	"github.com/eyedeekay/goSam"
 	"github.com/eyedeekay/httptunnel/common"
 	"github.com/eyedeekay/sam-forwarder/i2pkeys"
+	"github.com/eyedeekay/sam-forwarder/interface"
 )
 
 type SAMHTTPProxy struct {
@@ -145,6 +146,7 @@ func (p *SAMHTTPProxy) Serve() error {
 }
 
 func (p *SAMHTTPProxy) Close() error {
+	p.dialed = false
 	return p.goSam.Close()
 }
 
@@ -279,6 +281,10 @@ func (p *SAMHTTPProxy) connect(wr http.ResponseWriter, req *http.Request) {
 	go proxycommon.Transfer(client_conn, dest_conn)
 }
 
+func (f *SAMHTTPProxy) Up() bool {
+	return f.dialed
+}
+
 func (p *SAMHTTPProxy) Save() string {
 	if p.keyspath != "invalid.tunkey" {
 		if _, err := os.Stat(p.keyspath); os.IsNotExist(err) {
@@ -297,6 +303,36 @@ func (p *SAMHTTPProxy) Save() string {
 		}
 	}
 	return ""
+}
+
+func (handler *SAMHTTPProxy) Load() (samtunnel.SAMTunnel, error) {
+	var err error
+	handler.destination = handler.Save()
+	handler.goSam, err = goSam.NewClientFromOptions(
+		goSam.SetHost(handler.SamHost),
+		goSam.SetPort(handler.SamPort),
+		goSam.SetUnpublished(handler.dontPublishLease),
+		goSam.SetInLength(handler.inLength),
+		goSam.SetOutLength(handler.outLength),
+		goSam.SetInQuantity(handler.inQuantity),
+		goSam.SetOutQuantity(handler.outQuantity),
+		goSam.SetInBackups(handler.inBackups),
+		goSam.SetOutBackups(handler.outBackups),
+		goSam.SetReduceIdle(handler.reduceIdle),
+		goSam.SetReduceIdleTime(handler.reduceIdleTime),
+		goSam.SetReduceIdleQuantity(handler.reduceIdleQuantity),
+		goSam.SetCloseIdle(handler.closeIdle),
+		goSam.SetCloseIdleTime(handler.closeIdleTime),
+		goSam.SetCompression(handler.compression),
+		goSam.SetDebug(handler.debug),
+		goSam.SetLocalDestination(handler.destination),
+	)
+	if err != nil {
+		return nil, err
+	}
+	handler.transport = handler.freshTransport()
+	handler.client = handler.freshClient()
+	return handler, nil
 }
 
 func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
@@ -331,31 +367,9 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 			return nil, err
 		}
 	}
-	var err error
-	handler.destination = handler.Save()
-	handler.goSam, err = goSam.NewClientFromOptions(
-		goSam.SetHost(handler.SamHost),
-		goSam.SetPort(handler.SamPort),
-		goSam.SetUnpublished(handler.dontPublishLease),
-		goSam.SetInLength(handler.inLength),
-		goSam.SetOutLength(handler.outLength),
-		goSam.SetInQuantity(handler.inQuantity),
-		goSam.SetOutQuantity(handler.outQuantity),
-		goSam.SetInBackups(handler.inBackups),
-		goSam.SetOutBackups(handler.outBackups),
-		goSam.SetReduceIdle(handler.reduceIdle),
-		goSam.SetReduceIdleTime(handler.reduceIdleTime),
-		goSam.SetReduceIdleQuantity(handler.reduceIdleQuantity),
-		goSam.SetCloseIdle(handler.closeIdle),
-		goSam.SetCloseIdleTime(handler.closeIdleTime),
-		goSam.SetCompression(handler.compression),
-		goSam.SetDebug(handler.debug),
-		goSam.SetLocalDestination(handler.destination),
-	)
-	if err != nil {
-		return nil, err
+	l, e := handler.Load()
+	if e != nil {
+		return nil, e
 	}
-	handler.transport = handler.freshTransport()
-	handler.client = handler.freshClient()
-	return &handler, nil
+	return l.(*SAMHTTPProxy), nil
 }
