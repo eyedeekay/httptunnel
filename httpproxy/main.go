@@ -24,7 +24,7 @@ var (
 	samPortString        = flag.String("bridge-port", "7656", ":port of the SAM bridge")
 	watchProfiles        = flag.String("watch-profiles", "~/.mozilla/.firefox.profile.i2p.default/user.js,~/.mozilla/.firefox.profile.i2p.debug/user.js", "Monitor and control these Firefox profiles")
 	destfile             = flag.String("dest-file", "invalid.tunkey", "Use a long-term destination key")
-	debugConnection      = flag.Bool("conn-debug", false, "Print connection debug info")
+	debugConnection      = flag.Bool("conn-debug", true, "Print connection debug info")
 	inboundTunnelLength  = flag.Int("in-tun-length", 2, "Tunnel Length(default 3)")
 	outboundTunnelLength = flag.Int("out-tun-length", 2, "Tunnel Length(default 3)")
 	inboundTunnels       = flag.Int("in-tunnels", 2, "Inbound Tunnel Count(default 2)")

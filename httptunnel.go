@@ -57,6 +57,7 @@ type SAMHTTPProxy struct {
 
 	dialed bool
 	debug  bool
+	up     bool
 }
 
 var Quiet bool
@@ -146,7 +147,7 @@ func (p *SAMHTTPProxy) Serve() error {
 }
 
 func (p *SAMHTTPProxy) Close() error {
-	p.dialed = false
+	p.up = false
 	return p.goSam.Close()
 }
 
@@ -282,7 +283,7 @@ func (p *SAMHTTPProxy) connect(wr http.ResponseWriter, req *http.Request) {
 }
 
 func (f *SAMHTTPProxy) Up() bool {
-	return f.dialed
+	return f.up
 }
 
 func (p *SAMHTTPProxy) Save() string {
@@ -332,6 +333,7 @@ func (handler *SAMHTTPProxy) Load() (samtunnel.SAMTunnel, error) {
 	}
 	handler.transport = handler.freshTransport()
 	handler.client = handler.freshClient()
+	handler.up = true
 	return handler, nil
 }
 
