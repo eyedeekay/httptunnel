@@ -16,9 +16,11 @@ import (
 
 import (
 	"github.com/eyedeekay/goSam"
+	"github.com/eyedeekay/goSam/compat"
 	"github.com/eyedeekay/httptunnel/common"
 	"github.com/eyedeekay/sam-forwarder/i2pkeys"
 	"github.com/eyedeekay/sam-forwarder/interface"
+	"github.com/eyedeekay/sam3/i2pkeys"
 )
 
 type SAMHTTPProxy struct {
@@ -78,6 +80,11 @@ func (f *SAMHTTPProxy) GetType() string {
 
 func (f *SAMHTTPProxy) ID() string {
 	return f.tunName
+}
+
+func (f *SAMHTTPProxy) Keys() i2pkeys.I2PKeys {
+	k, _ := samkeys.DestToKeys(f.goSam.Destination())
+	return k
 }
 
 func (f *SAMHTTPProxy) Props() map[string]string {
