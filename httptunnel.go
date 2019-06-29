@@ -229,7 +229,7 @@ func (p *SAMHTTPProxy) reset(wr http.ResponseWriter, req *http.Request) {
 	plog("Validating control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
 	if strings.SplitN(req.RemoteAddr, ":", 2)[0] == p.controlHost {
 		plog("Validated control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
-		resp, err := http.Get("http://"+p.controlHost+":"+p.controlPort)
+		resp, err := http.Get("http://" + p.controlHost + ":" + p.controlPort)
 		if err == nil {
 			wr.Header().Set("Content-Type", "text/html; charset=utf-8")
 			wr.Header().Set("Access-Control-Allow-Origin", "*")
