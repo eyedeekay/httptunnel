@@ -3,6 +3,9 @@ i2phttpproxy
 
 **This is *way* more useful than it is tested. Please be careful.**
 
+On Unixes, always run it with the flag -littleboss=start to ensure that the
+proxy always re-starts itself.
+
 This is a very simple standalone HTTP Proxy for I2P based on the SAM Bridge. It
 has a few advantages in certain situations, especially for adapting applications
 that speak HTTP to the I2P network. It allows applications to start their own
