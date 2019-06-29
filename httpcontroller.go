@@ -22,12 +22,16 @@ func NewSAMHTTPController(profiles []string, proxy *http.Server) (*SAMHTTPContro
 		c.ProxyServer = proxy
 	}
 	for index, profile := range profiles {
-		if bytes, err := ioutil.ReadFile(profile); err == nil {
-			log.Println("Monitoring Firefox Profile", index, "at:", profile)
-			c.Profiles = append(c.Profiles, profile)
-			c.savedProfiles = append(c.savedProfiles, string(bytes))
-		} else {
-			return nil, err
+		if profile != "" {
+			if bytes, err := ioutil.ReadFile(profile); err == nil {
+				if string(bytes) != "" {
+					log.Println("Monitoring Firefox Profile", index, "at:", profile)
+					c.Profiles = append(c.Profiles, profile)
+					c.savedProfiles = append(c.savedProfiles, string(bytes))
+				}
+			} else {
+				return nil, err
+			}
 		}
 	}
 	return &c, nil
