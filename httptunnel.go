@@ -1,6 +1,7 @@
 package i2phttpproxy
 
 import (
+	//"context"
 	"crypto/tls"
 	"fmt"
 	"golang.org/x/time/rate"
@@ -12,6 +13,7 @@ import (
 	"os"
 	"strings"
 	"time"
+    //"runtime"
 )
 
 import (
@@ -24,10 +26,12 @@ import (
 )
 
 type SAMHTTPProxy struct {
+	Server             *http.Server
 	goSam              *goSam.Client
 	client             *http.Client
 	transport          *http.Transport
 	rateLimiter        *rate.Limiter
+	Controller         *http.Server
 	tunName            string
 	sigType            string
 	proxyHost          string
@@ -56,6 +60,8 @@ type SAMHTTPProxy struct {
 	compression        bool
 
 	useOutProxy bool
+
+	profiles []string
 
 	dialed bool
 	debug  bool
@@ -97,7 +103,32 @@ func (f *SAMHTTPProxy) Props() map[string]string {
 }
 
 func (p *SAMHTTPProxy) Cleanup() {
-	p.Close()
+	log.Println(p.Keys().Addr().Base32())
+    p.goSam = nil //.Close()
+    p, _ = NewHttpProxy(
+		SetHost(p.SamHost),
+		SetPort(p.SamPort),
+		SetDebug(p.debug),
+		SetProxyAddr(p.Target()),
+		SetControlAddr(p.ControlAddr()),
+		SetProfiles(p.profiles),
+		SetInLength(uint(p.inLength)),
+		SetOutLength(uint(p.outLength)),
+		SetInQuantity(uint(p.inQuantity)),
+		SetOutQuantity(uint(p.outQuantity)),
+		SetInBackups(uint(p.inBackups)),
+		SetOutBackups(uint(p.outBackups)),
+		SetInVariance(p.inVariance),
+		SetOutVariance(p.outVariance),
+		SetUnpublished(p.dontPublishLease),
+		SetReduceIdle(p.reduceIdle),
+		SetReduceIdleTime(uint(p.reduceIdleTime)),
+		SetReduceIdleQuantity(uint(p.reduceIdleQuantity)),
+		SetCloseIdle(p.closeIdle),
+		SetCloseIdleTime(uint(p.closeIdleTime)),
+		SetKeysPath(p.keyspath),
+	)
+	log.Println(p.Keys().Addr().Base32())
 }
 
 func (p *SAMHTTPProxy) Print() string {
@@ -119,6 +150,10 @@ func (p *SAMHTTPProxy) Search(search string) string {
 
 func (p *SAMHTTPProxy) Target() string {
 	return p.proxyHost + ":" + p.proxyPort
+}
+
+func (p *SAMHTTPProxy) ControlAddr() string {
+	return p.controlHost + ":" + p.controlPort
 }
 
 func (p *SAMHTTPProxy) Base32() string {
@@ -155,6 +190,7 @@ func (p *SAMHTTPProxy) Serve() error {
 
 func (p *SAMHTTPProxy) Close() error {
 	p.up = false
+	p.Server.Close()
 	return p.goSam.Close()
 }
 
@@ -240,6 +276,10 @@ func (p *SAMHTTPProxy) reset(wr http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func (p *SAMHTTPProxy) Reset(wr http.ResponseWriter, req *http.Request) {
+	p.reset(wr, req)
+}
+
 func (p *SAMHTTPProxy) get(wr http.ResponseWriter, req *http.Request) {
 	req.RequestURI = ""
 	proxycommon.DelHopHeaders(req.Header)
@@ -258,6 +298,10 @@ func (p *SAMHTTPProxy) get(wr http.ResponseWriter, req *http.Request) {
 	proxycommon.CopyHeader(wr.Header(), resp.Header)
 	wr.WriteHeader(resp.StatusCode)
 	io.Copy(wr, resp.Body)
+}
+
+func (p *SAMHTTPProxy) Get(wr http.ResponseWriter, req *http.Request) {
+	p.get(wr, req)
 }
 
 func (p *SAMHTTPProxy) connect(wr http.ResponseWriter, req *http.Request) {
@@ -286,6 +330,10 @@ func (p *SAMHTTPProxy) connect(wr http.ResponseWriter, req *http.Request) {
 	}
 	go proxycommon.Transfer(dest_conn, client_conn)
 	go proxycommon.Transfer(client_conn, dest_conn)
+}
+
+func (p *SAMHTTPProxy) Connect(wr http.ResponseWriter, req *http.Request) {
+	p.connect(wr, req)
 }
 
 func (f *SAMHTTPProxy) Up() bool {
@@ -337,9 +385,13 @@ func (handler *SAMHTTPProxy) Load() (samtunnel.SAMTunnel, error) {
 	if err != nil {
 		return nil, err
 	}
+	if handler.Controller.Handler, err = NewSAMHTTPController(handler.profiles, handler); err != nil {
+		return nil, err
+	}
 	handler.transport = handler.freshTransport()
 	handler.client = handler.freshClient()
 	handler.up = true
+	handler.Server.Handler = handler
 	return handler, nil
 }
 
@@ -370,11 +422,21 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 	handler.tunName = "0"
 	handler.keyspath = "invalid.tunkey"
 	handler.destination = ""
+	handler.Controller = &http.Server{
+		ReadHeaderTimeout: 600 * time.Second,
+		WriteTimeout:      600 * time.Second,
+	}
+	handler.Server = &http.Server{
+		ReadTimeout:  600 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
 	for _, o := range opts {
 		if err := o(&handler); err != nil {
 			return nil, err
 		}
 	}
+	handler.Controller.Addr = handler.ControlAddr()
+	handler.Server.Addr = handler.Target()
 	l, e := handler.Load()
 	if e != nil {
 		return nil, e

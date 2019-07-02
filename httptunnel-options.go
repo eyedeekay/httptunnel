@@ -3,6 +3,7 @@ package i2phttpproxy
 import (
 	"fmt"
 	"log"
+	"net"
 	"strconv"
 	"strings"
 )
@@ -54,6 +55,40 @@ func SetAddr(s ...string) func(*SAMHTTPProxy) error {
 //SetControlAddr sets a clients's address in the form host:port or host, port
 func SetControlAddr(s ...string) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
+		if len(s) == 1 {
+			split := strings.SplitN(s[0], ":", 2)
+			if len(split) == 2 {
+				if i, err := strconv.Atoi(split[1]); err == nil {
+					if i < 65536 {
+						c.controlHost = split[0]
+						c.controlPort = split[1]
+						return nil
+					}
+					return fmt.Errorf("Invalid port")
+				}
+				return fmt.Errorf("Invalid port; non-number")
+			}
+			return fmt.Errorf("Invalid address; use host:port %s ", split)
+		} else if len(s) == 2 {
+			if i, err := strconv.Atoi(s[1]); err == nil {
+				if i < 65536 {
+					c.controlHost = s[0]
+					c.controlPort = s[1]
+					return nil
+				}
+				return fmt.Errorf("Invalid port")
+			}
+			return fmt.Errorf("Invalid port; non-number")
+		} else {
+			return fmt.Errorf("Invalid address")
+		}
+	}
+}
+
+//SetControlListener sets a clients's address in the form host:port or host, port
+func SetControlListener(lb net.Listener) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		s := strings.Split(lb.Addr().String(), ":")
 		if len(s) == 1 {
 			split := strings.SplitN(s[0], ":", 2)
 			if len(split) == 2 {
@@ -361,6 +396,18 @@ func SetCloseIdleTime(u uint) func(*SAMHTTPProxy) error {
 			return nil
 		}
 		return fmt.Errorf("Invalid close idle time %v", u)
+	}
+}
+
+func SetProfiles(profiles []string) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		for index, profile := range profiles {
+			if profile != "" {
+				log.Println("Monitoring Firefox Profile", index, "at:", profile)
+				c.profiles = append(c.profiles, profile)
+			}
+		}
+		return nil
 	}
 }
 

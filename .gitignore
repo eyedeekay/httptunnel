@@ -5,6 +5,8 @@
 *.so
 *.dylib
 httpproxy-*
+outproxy-*
+o
 *.js
 *.js.map
 

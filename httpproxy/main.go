@@ -22,7 +22,7 @@ var (
 	tunnelName           = flag.String("service-name", "sam-http-proxy", "Name of the service(can be anything)")
 	samHostString        = flag.String("bridge-host", "127.0.0.1", "host: of the SAM bridge")
 	samPortString        = flag.String("bridge-port", "7656", ":port of the SAM bridge")
-	watchProfiles        = flag.String("watch-profiles", "~/.mozilla/.firefox.profile.i2p.default/user.js,~/.mozilla/.firefox.profile.i2p.debug/user.js", "Monitor and control these Firefox profiles")
+	watchProfiles        = flag.String("watch-profiles", "", "Monitor and control these Firefox profiles")
 	destfile             = flag.String("dest-file", "invalid.tunkey", "Use a long-term destination key")
 	debugConnection      = flag.Bool("conn-debug", true, "Print connection debug info")
 	inboundTunnelLength  = flag.Int("in-tun-length", 2, "Tunnel Length(default 3)")
@@ -73,19 +73,13 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		*runQuiet = true
 		*debugConnection = false
 	}
-	profiles := strings.Split(*watchProfiles, ",")
 
-	srv := &http.Server{
-		ReadTimeout:  600 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		Addr:         ln.Addr().String(),
-	}
-	var err error
-	srv.Handler, err = NewHttpProxy(
+	Handler, err := NewHttpProxy(
 		SetHost(*samHostString),
 		SetPort(*samPortString),
 		SetProxyAddr(ln.Addr().String()),
 		SetControlAddr(cln.Addr().String()),
+		SetProfiles(strings.Split(*watchProfiles, ",")),
 		SetDebug(*debugConnection),
 		SetInLength(uint(*inboundTunnelLength)),
 		SetOutLength(uint(*outboundTunnelLength)),
@@ -104,17 +98,10 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		SetCloseIdleTime(uint(*closeIdleTime)),
 		SetKeysPath(*destfile),
 	)
-	Quiet = *runQuiet
+
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	ctrlsrv := &http.Server{
-		ReadHeaderTimeout: 600 * time.Second,
-		WriteTimeout:      600 * time.Second,
-		Addr:              cln.Addr().String(),
-	}
-	ctrlsrv.Handler, err = NewSAMHTTPController(profiles, nil)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -122,16 +109,16 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 	go func() {
 		for sig := range c {
 			if sig == os.Interrupt {
-				srv.Handler.(*SAMHTTPProxy).Close()
-				srv.Shutdown(ctx)
-				ctrlsrv.Shutdown(ctx)
+				Handler.Close()
+				Handler.Server.Shutdown(ctx)
+				Handler.Controller.Shutdown(ctx)
 			}
 		}
 	}()
 
 	go func() {
 		log.Println("Starting control server on", cln.Addr())
-		if err := ctrlsrv.Serve(cln); err != nil {
+		if err := Handler.Controller.Serve(cln); err != nil {
 			if err == http.ErrServerClosed {
 				return
 			}
@@ -142,7 +129,7 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 
 	go func() {
 		log.Println("Starting proxy server on", ln.Addr())
-		if err := srv.Serve(ln); err != nil {
+		if err := Handler.Server.Serve(ln); err != nil {
 			if err == http.ErrServerClosed {
 				return
 			}

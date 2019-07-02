@@ -5,22 +5,28 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
-	"os/exec"
-	"runtime"
+	//	"os"
+	//	"os/exec"
 )
 
+//import (
+//"github.com/eyedeekay/sam-forwarder/interface"
+//)
+
 type SAMHTTPController struct {
-	ProxyServer   *http.Server
+	ProxyServer   *SAMHTTPProxy
 	Profiles      []string
 	savedProfiles []string
 }
 
-func NewSAMHTTPController(profiles []string, proxy *http.Server) (*SAMHTTPController, error) {
+var ctx context.Context
+
+func NewSAMHTTPController(profiles []string, ProxyServer *SAMHTTPProxy) (*SAMHTTPController, error) {
 	var c SAMHTTPController
-	if proxy != nil {
-		c.ProxyServer = proxy
-	}
+
+	c.ProxyServer = ProxyServer
+	//    c.ProxyServer.Cleanup()
+
 	for index, profile := range profiles {
 		if profile != "" {
 			if bytes, err := ioutil.ReadFile(profile); err == nil {
@@ -49,83 +55,64 @@ func (p *SAMHTTPController) restoreProfiles() error {
 }
 
 func (p *SAMHTTPController) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
-	var err error
 	wr.Header().Set("Content-Type", "text/html; charset=utf-8")
 	wr.Header().Set("Access-Control-Allow-Origin", "*")
 	wr.WriteHeader(http.StatusOK)
 	wr.Write([]byte("200 - Restart from " + req.Header.Get("Origin") + "OK!"))
 	log.Println("attempting restart")
-	if runtime.GOOS == "windows" {
-		err = p.windowsRestart()
-	} else {
-		err = unixRestart()
-	}
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = p.restoreProfiles()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func unixRestart() error {
-	path, err := os.Executable()
-	if err != nil {
-		return err
-	}
-	cmnd := exec.Command(path, "-littleboss=reload")
-	err = cmnd.Run()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *SAMHTTPController) windowsStart() error {
 	var err error
-	s.ProxyServer.Handler, err = NewHttpProxy(
-		SetHost(s.ProxyServer.Handler.(*SAMHTTPProxy).SamHost),
-		SetPort(s.ProxyServer.Handler.(*SAMHTTPProxy).SamPort),
-		SetDebug(s.ProxyServer.Handler.(*SAMHTTPProxy).debug),
-		SetInLength(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).inLength)),
-		SetOutLength(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).outLength)),
-		SetInQuantity(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).inQuantity)),
-		SetOutQuantity(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).outQuantity)),
-		SetInBackups(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).inBackups)),
-		SetOutBackups(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).outBackups)),
-		SetInVariance(s.ProxyServer.Handler.(*SAMHTTPProxy).inVariance),
-		SetOutVariance(s.ProxyServer.Handler.(*SAMHTTPProxy).outVariance),
-		SetUnpublished(s.ProxyServer.Handler.(*SAMHTTPProxy).dontPublishLease),
-		SetReduceIdle(s.ProxyServer.Handler.(*SAMHTTPProxy).reduceIdle),
-		SetReduceIdleTime(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).reduceIdleTime)),
-		SetReduceIdleQuantity(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).reduceIdleQuantity)),
-	)
+	p.ProxyServer, err = p.Restart(p.ProxyServer)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := s.ProxyServer.ListenAndServe(); err != nil {
-		log.Fatal("ListenAndServe:", err)
+	//if err := p.ProxyServer.Server.ListenAndServe(); err != nil {
+		//log.Fatal("ListenAndServe:", err)
+	//}
+}
+
+func (s *SAMHTTPController) Start() (*SAMHTTPProxy, error) {
+	log.Println("Starting proxy")
+	return NewHttpProxy(
+		SetHost(s.ProxyServer.SamHost),
+		SetPort(s.ProxyServer.SamPort),
+		SetDebug(s.ProxyServer.debug),
+		SetProxyAddr(s.ProxyServer.Target()),
+		SetControlAddr(s.ProxyServer.ControlAddr()),
+		SetProfiles(s.Profiles),
+		SetInLength(uint(s.ProxyServer.inLength)),
+		SetOutLength(uint(s.ProxyServer.outLength)),
+		SetInQuantity(uint(s.ProxyServer.inQuantity)),
+		SetOutQuantity(uint(s.ProxyServer.outQuantity)),
+		SetInBackups(uint(s.ProxyServer.inBackups)),
+		SetOutBackups(uint(s.ProxyServer.outBackups)),
+		SetInVariance(s.ProxyServer.inVariance),
+		SetOutVariance(s.ProxyServer.outVariance),
+		SetUnpublished(s.ProxyServer.dontPublishLease),
+		SetReduceIdle(s.ProxyServer.reduceIdle),
+		SetReduceIdleTime(uint(s.ProxyServer.reduceIdleTime)),
+		SetReduceIdleQuantity(uint(s.ProxyServer.reduceIdleQuantity)),
+		SetCloseIdle(s.ProxyServer.closeIdle),
+		SetCloseIdleTime(uint(s.ProxyServer.closeIdleTime)),
+		SetKeysPath(s.ProxyServer.keyspath),
+	)
+}
+
+func (s *SAMHTTPController) Stop(ProxyServer *SAMHTTPProxy) error {
+	log.Println("Stopping proxy")
+	s.ProxyServer.Cleanup()
+	err := s.restoreProfiles()
+	if err != nil {
+		log.Fatal(err)
 	}
 	return nil
 }
 
-func (s *SAMHTTPController) windowsStop() error {
-	err := s.ProxyServer.Shutdown(context.TODO())
+func (s *SAMHTTPController) Restart(ProxyServer *SAMHTTPProxy) (*SAMHTTPProxy, error) {
+	log.Println("Ordering restart")
+	err := s.Stop(ProxyServer)
 	if err != nil {
-		return err
+		log.Println(err)
+		return nil, err
 	}
-	return nil
-}
-
-func (s *SAMHTTPController) windowsRestart() error {
-	err := s.windowsStop()
-	if err != nil {
-		return err
-	}
-	err = s.windowsStart()
-	if err != nil {
-		return err
-	}
-	return nil
+	return s.Start()
 }

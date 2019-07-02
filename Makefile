@@ -15,6 +15,21 @@ dep:
 
 win: win32 win64
 
+blog:
+	mkdir -p $(HOME)/Workspace/desktop-Workspace/mtn/i2p.www/i2p2www/blog/2019/07/01
+	cp docs/README.rst $(HOME)/Workspace/desktop-Workspace/mtn/i2p.www/i2p2www/blog/2019/07/01/simple-http-proxy.rst
+
+rm:
+	rm $(HOME)/Workspace/desktop-Workspace/mtn/i2p.www/i2p2www/blog/2019/06/01/simple-http-proxy.rst
+
+wintest:
+	go build \
+		$(GO_COMPILER_OPTS) \
+		-o ./httpproxy-wintest \
+		./windows/main.go
+	@echo "built"
+
+
 win64:
 	GOOS=windows GOARCH=amd64 go build \
 		$(GO_COMPILER_OPTS) \

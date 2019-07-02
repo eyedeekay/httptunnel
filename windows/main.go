@@ -41,15 +41,7 @@ func main() {
 	flag.Parse()
 	addr := *proxHostString + ":" + *proxPortString
 
-	srv := &http.Server{
-		ReadTimeout:  600 * time.Second,
-		WriteTimeout: 600 * time.Second,
-		Addr:         addr,
-	}
-	profiles := strings.Split(*watchProfiles, ",")
-	go SetupController(srv, *controlHostString+":"+*controlPortString, profiles)
-	var err error
-	srv.Handler, err = NewHttpProxy(
+	Handler, err := NewHttpProxy(
 		SetHost(*samHostString),
 		SetPort(*samPortString),
 		SetDebug(*debugConnection),
@@ -65,7 +57,9 @@ func main() {
 		SetReduceIdle(*reduceIdle),
 		SetReduceIdleTime(uint(*reduceIdleTime)),
 		SetReduceIdleQuantity(uint(*reduceIdleQuantity)),
+		SetProfiles(strings.Split(*watchProfiles, ",")),
 	)
+	go SetupController(Handler, *controlHostString+":"+*controlPortString, strings.Split(*watchProfiles, ","))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,7 +67,7 @@ func main() {
 	go counter()
 
 	log.Println("Starting proxy server on", addr)
-	if err := srv.ListenAndServe(); err != nil {
+	if err := Handler.Server.ListenAndServe(); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
 }
@@ -87,7 +81,7 @@ func counter() {
 	}
 }
 
-func SetupController(srv *http.Server, addr string, profiles []string) {
+func SetupController(srv *SAMHTTPProxy, addr string, profiles []string) {
 	ctrlsrv := &http.Server{
 		ReadTimeout:  600 * time.Second,
 		WriteTimeout: 600 * time.Second,

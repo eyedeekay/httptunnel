@@ -263,7 +263,7 @@ Credits/Notes:
  1. [This guide is based on a guide for the clearnet](https://medium.com/@mlowicki/http-s-proxy-in-golang-in-less-than-100-lines-of-code-6a51c2f2c38c)
 and that is only 10% because it was easier for me. 90% of the reason is to
 illustrate that *using I2P in your application is, in all likelihood, not that*
-*different than what you're already doing.*\* In all, this example is only 111
+*different than what you're already doing*(if the rest of your application only
+sends and recieves that which is non-linkable and absolutely necessary to its
+operation.)\* In all, this example is only 111
 lines of code long minus comments.
- * if the rest of your application only sends and recieves that which is
-non-linkable and absolutely necessary to its operation.
