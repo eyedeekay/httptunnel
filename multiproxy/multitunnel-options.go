@@ -2,7 +2,7 @@ package i2pbrowserproxy
 
 import (
 	"fmt"
-	"log"
+//	"log"
 	"strconv"
 	"strings"
 )
@@ -344,23 +344,11 @@ func SetCompression(b bool) func(*SAMMultiProxy) error {
 	}
 }
 
-//SetCloseIdle enables debugging messages
-func SetCloseIdle(b bool) func(*SAMMultiProxy) error {
+//SetProxyMode tells whether to use per-ID or per-domain isolation
+func SetProxyMode(b bool) func(*SAMMultiProxy) error {
 	return func(c *SAMMultiProxy) error {
-		c.closeIdle = b
+		c.aggressive = b
 		return nil
-	}
-}
-
-//SetCloseIdleTime sets time to wait before the tunnel quantity is reduced
-func SetCloseIdleTime(u uint) func(*SAMMultiProxy) error {
-	return func(c *SAMMultiProxy) error {
-		log.Println("TEST CLOSE", u, (u > 299999))
-		if u > 299999 {
-			c.closeIdleTime = u
-			return nil
-		}
-		return fmt.Errorf("Invalid close idle time %v", u)
 	}
 }
 
@@ -438,15 +426,4 @@ func (c *SAMMultiProxy) usecompresion() string {
 		return "i2cp.gzip=true"
 	}
 	return "i2cp.gzip=false"
-}
-
-func (c *SAMMultiProxy) closeonidle() string {
-	if c.reduceIdle {
-		return "i2cp.closeOnIdle=true"
-	}
-	return "i2cp.closeOnIdle=false"
-}
-
-func (c *SAMMultiProxy) closeidletime() string {
-	return fmt.Sprintf("i2cp.closeIdleTime=%d", c.reduceIdleTime)
 }

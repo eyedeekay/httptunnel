@@ -12,6 +12,7 @@ fmt:
 
 dep:
 	go get -u github.com/eyedeekay/httptunnel/httpproxy
+	go get -u github.com/eyedeekay/httptunnel/multiproxy/browserproxy
 
 win: win32 win64
 

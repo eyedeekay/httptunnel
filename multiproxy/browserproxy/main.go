@@ -20,7 +20,8 @@ import (
 )
 
 var (
-	tunnelName           = flag.String("service-name", "sam-http-proxy", "Name of the service(can be anything)")
+	tunnelName           = flag.String("service-name", "sam-browser-proxy", "Name of the service(can be anything)")
+	aggressiveIsolation  = flag.Bool("mode-aggressive", false, "Create a new client for every single eepSite, rather than making use of contextual identities")
 	samHostString        = flag.String("bridge-host", "127.0.0.1", "host: of the SAM bridge")
 	samPortString        = flag.String("bridge-port", "7656", ":port of the SAM bridge")
 	watchProfiles        = flag.String("watch-profiles", "~/.mozilla/.firefox.profile.i2p.default/user.js,~/.mozilla/.firefox.profile.i2p.debug/user.js", "Monitor and control these Firefox profiles")
@@ -37,8 +38,6 @@ var (
 	dontPublishLease     = flag.Bool("no-publish", true, "Don't publish the leaseset(Client mode)")
 	encryptLease         = flag.Bool("encrypt-lease", false, "Encrypt the leaseset(default false, inert)")
 	reduceIdle           = flag.Bool("reduce-idle", false, "Reduce tunnels on extended idle time")
-	closeIdle            = flag.Bool("close-idle", false, "Close tunnels on extended idle time")
-	closeIdleTime        = flag.Int("close-idle-time", 3000000, "Reduce tunnels after time(Ms)")
 	useCompression       = flag.Bool("use-compression", true, "Enable gzip compression")
 	reduceIdleTime       = flag.Int("reduce-idle-time", 2000000, "Reduce tunnels after time(Ms)")
 	reduceIdleQuantity   = flag.Int("reduce-idle-tunnels", 1, "Reduce tunnels to this level")
@@ -101,9 +100,8 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		SetCompression(*useCompression),
 		SetReduceIdleTime(uint(*reduceIdleTime)),
 		SetReduceIdleQuantity(uint(*reduceIdleQuantity)),
-		SetCloseIdle(*closeIdle),
-		SetCloseIdleTime(uint(*closeIdleTime)),
 		SetKeysPath(*destfile),
+		SetProxyMode(*aggressiveIsolation),
 	)
 	Quiet = *runQuiet
 	if err != nil {

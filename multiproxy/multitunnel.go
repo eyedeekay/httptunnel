@@ -55,21 +55,34 @@ type SAMMultiProxy struct {
 	reduceIdle         bool
 	reduceIdleTime     uint
 	reduceIdleQuantity uint
-	closeIdle          bool
-	closeIdleTime      uint
 	compression        bool
 
 	useOutProxy bool
 
-	dialed bool
-	debug  bool
-	up     bool
+	dialed     bool
+	debug      bool
+	up         bool
+	aggressive bool
+	recent     string
 }
 
 var Quiet bool
 
-func (f *SAMMultiProxy) findClient() *samClient {
-	return f.clients["general"]
+func (f *SAMMultiProxy) findClient(key string) *samClient {
+	var err error
+	log.Println("finding client", key)
+	for site, proxy := range f.clients {
+		if site == key {
+			log.Println("found client", site)
+			f.recent = key
+			return proxy
+		}
+	}
+	f.clients[key], err = f.freshSAMClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return f.clients[key]
 }
 
 func plog(in ...interface{}) {
@@ -90,8 +103,8 @@ func (f *SAMMultiProxy) ID() string {
 	return f.tunName
 }
 
-func (f *SAMMultiProxy) Keys() i2pkeys.I2PKeys {
-	k, _ := samkeys.DestToKeys(f.findClient().goSam.Destination())
+func (p *SAMMultiProxy) Keys() i2pkeys.I2PKeys {
+	k, _ := samkeys.DestToKeys(p.findClient(p.recent).goSam.Destination())
 	return k
 }
 
@@ -109,7 +122,7 @@ func (p *SAMMultiProxy) Cleanup() {
 }
 
 func (p *SAMMultiProxy) Print() string {
-	return p.findClient().goSam.Print()
+	return p.findClient(p.recent).goSam.Print()
 }
 
 func (p *SAMMultiProxy) Search(search string) string {
@@ -130,11 +143,11 @@ func (p *SAMMultiProxy) Target() string {
 }
 
 func (p *SAMMultiProxy) Base32() string {
-	return p.findClient().goSam.Base32()
+	return p.findClient(p.recent).goSam.Base32()
 }
 
 func (p *SAMMultiProxy) Base64() string {
-	return p.findClient().goSam.Base64()
+	return p.findClient(p.recent).goSam.Base64()
 }
 
 func (p *SAMMultiProxy) Serve() error {
@@ -163,12 +176,16 @@ func (p *SAMMultiProxy) Serve() error {
 
 func (p *SAMMultiProxy) Close() error {
 	p.up = false
-	return p.findClient().goSam.Close()
+	return p.findClient(p.recent).goSam.Close()
 }
 
 func (p *SAMMultiProxy) freshTransport() *http.Transport {
+	if p.clients["general"] == nil {
+		p.clients["general"] = &samClient{}
+		p.clients["general"].goSam, _ = p.freshGoSAMClient()
+	}
 	t := http.Transport{
-		DialContext:           p.findClient().goSam.DialContext,
+		DialContext:           p.clients["general"].goSam.DialContext,
 		MaxConnsPerHost:       1,
 		MaxIdleConns:          0,
 		MaxIdleConnsPerHost:   1,
@@ -183,14 +200,42 @@ func (p *SAMMultiProxy) freshTransport() *http.Transport {
 
 func (p *SAMMultiProxy) freshClient() *http.Client {
 	return &http.Client{
-		Transport:     p.findClient().transport,
+		Transport:     p.freshTransport(),
 		Timeout:       time.Second * 300,
 		CheckRedirect: nil,
 	}
 }
 
-func (p *SAMMultiProxy) freshSAMClient() (*goSam.Client, error) {
-	return p.findClient().goSam.NewClient()
+func (p *SAMMultiProxy) freshSAMClient() (*samClient, error) {
+	var s samClient
+	var err error
+	s.goSam, err = p.freshGoSAMClient()
+	if err != nil {
+		return nil, err
+	}
+	s.transport = p.freshTransport()
+	s.client = p.freshClient()
+	return &s, nil
+}
+
+func (p *SAMMultiProxy) freshGoSAMClient() (*goSam.Client, error) {
+	return goSam.NewClientFromOptions(
+		goSam.SetHost(p.SamHost),
+		goSam.SetPort(p.SamPort),
+		goSam.SetUnpublished(p.dontPublishLease),
+		goSam.SetInLength(p.inLength),
+		goSam.SetOutLength(p.outLength),
+		goSam.SetInQuantity(p.inQuantity),
+		goSam.SetOutQuantity(p.outQuantity),
+		goSam.SetInBackups(p.inBackups),
+		goSam.SetOutBackups(p.outBackups),
+		goSam.SetReduceIdle(p.reduceIdle),
+		goSam.SetReduceIdleTime(p.reduceIdleTime),
+		goSam.SetReduceIdleQuantity(p.reduceIdleQuantity),
+		goSam.SetCompression(p.compression),
+		goSam.SetDebug(p.debug),
+		goSam.SetLocalDestination(p.destination),
+	)
 }
 
 //return the combined host:port of the SAM bridge
@@ -251,8 +296,8 @@ func (p *SAMMultiProxy) reset(wr http.ResponseWriter, req *http.Request) {
 func (p *SAMMultiProxy) get(wr http.ResponseWriter, req *http.Request) {
 	req.RequestURI = ""
 	proxycommon.DelHopHeaders(req.Header)
-	p.findClient().client = p.freshClient()
-	resp, err := p.findClient().client.Do(req)
+	client := p.Signin(wr, req)
+    resp, err := client.client.Do(req)
 	if err != nil {
 		msg := "Proxy Error " + err.Error()
 		if !Quiet {
@@ -270,7 +315,8 @@ func (p *SAMMultiProxy) get(wr http.ResponseWriter, req *http.Request) {
 
 func (p *SAMMultiProxy) connect(wr http.ResponseWriter, req *http.Request) {
 	plog("CONNECT via i2p to", req.URL.Host)
-	dest_conn, err := p.findClient().goSam.Dial("tcp", req.URL.Host)
+	client := p.Signin(wr, req)
+    dest_conn, err := client.goSam.Dial("tcp", req.URL.Host)
 	if err != nil {
 		if !Quiet {
 			http.Error(wr, err.Error(), http.StatusServiceUnavailable)
@@ -303,11 +349,11 @@ func (f *SAMMultiProxy) Up() bool {
 func (p *SAMMultiProxy) Save() string {
 	if p.keyspath != "invalid.tunkey" {
 		if _, err := os.Stat(p.keyspath); os.IsNotExist(err) {
-			if p.findClient().goSam != nil {
-				if p.findClient().goSam.Destination() != "" {
-					ioutil.WriteFile(p.keyspath, []byte(p.findClient().goSam.Destination()), 0644)
-					p.destination = p.findClient().goSam.Destination()
-					return p.findClient().goSam.Destination()
+			if p.findClient(p.recent).goSam != nil {
+				if p.findClient(p.recent).goSam.Destination() != "" {
+					ioutil.WriteFile(p.keyspath, []byte(p.findClient(p.recent).goSam.Destination()), 0644)
+					p.destination = p.findClient(p.recent).goSam.Destination()
+					return p.findClient(p.recent).goSam.Destination()
 				}
 			}
 		} else {
@@ -323,7 +369,8 @@ func (p *SAMMultiProxy) Save() string {
 func (handler *SAMMultiProxy) Load() (samtunnel.SAMTunnel, error) {
 	var err error
 	handler.destination = handler.Save()
-	handler.findClient().goSam, err = goSam.NewClientFromOptions(
+	handler.clients["general"] = &samClient{}
+	handler.clients["general"].goSam, err = goSam.NewClientFromOptions(
 		goSam.SetHost(handler.SamHost),
 		goSam.SetPort(handler.SamPort),
 		goSam.SetUnpublished(handler.dontPublishLease),
@@ -336,8 +383,6 @@ func (handler *SAMMultiProxy) Load() (samtunnel.SAMTunnel, error) {
 		goSam.SetReduceIdle(handler.reduceIdle),
 		goSam.SetReduceIdleTime(handler.reduceIdleTime),
 		goSam.SetReduceIdleQuantity(handler.reduceIdleQuantity),
-		goSam.SetCloseIdle(handler.closeIdle),
-		goSam.SetCloseIdleTime(handler.closeIdleTime),
 		goSam.SetCompression(handler.compression),
 		goSam.SetDebug(handler.debug),
 		goSam.SetLocalDestination(handler.destination),
@@ -345,8 +390,8 @@ func (handler *SAMMultiProxy) Load() (samtunnel.SAMTunnel, error) {
 	if err != nil {
 		return nil, err
 	}
-	handler.findClient().transport = handler.freshTransport()
-	handler.findClient().client = handler.freshClient()
+	handler.clients["general"].transport = handler.freshTransport()
+	handler.clients["general"].client = handler.freshClient()
 	handler.up = true
 	return handler, nil
 }
@@ -371,13 +416,15 @@ func NewHttpProxy(opts ...func(*SAMMultiProxy) error) (*SAMMultiProxy, error) {
 	handler.encryptLease = false
 	handler.reduceIdle = false
 	handler.reduceIdleTime = 2000000
-	handler.closeIdleTime = 3000000
 	handler.reduceIdleQuantity = 1
 	handler.useOutProxy = false
 	handler.compression = true
 	handler.tunName = "0"
 	handler.keyspath = "invalid.tunkey"
 	handler.destination = ""
+	handler.clients = make(map[string]*samClient)
+	handler.recent = "general"
+	handler.aggressive = false
 	for _, o := range opts {
 		if err := o(&handler); err != nil {
 			return nil, err
