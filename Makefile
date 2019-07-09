@@ -161,3 +161,9 @@ opmac32:
 		-o ./outproxy-32.app \
 		./outproxy/cmd/main.go
 	@echo "built"
+
+req:
+	http_proxy=http://127.0.0.1:7950 \
+	curl --header "Content-Type: application/json" \
+		--data '{"identity":"xyz"}' \
+		http://inr.i2p

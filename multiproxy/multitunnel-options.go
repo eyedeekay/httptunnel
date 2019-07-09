@@ -2,7 +2,7 @@ package i2pbrowserproxy
 
 import (
 	"fmt"
-//	"log"
+	//	"log"
 	"strconv"
 	"strings"
 )

@@ -78,7 +78,7 @@ func (f *SAMMultiProxy) findClient(key string) *samClient {
 			return proxy
 		}
 	}
-	f.clients[key], err = f.freshSAMClient()
+	f.clients[key], err = f.freshSAMClient(key)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -176,16 +176,23 @@ func (p *SAMMultiProxy) Serve() error {
 
 func (p *SAMMultiProxy) Close() error {
 	p.up = false
-	return p.findClient(p.recent).goSam.Close()
+	for _, v := range p.clients {
+		if err := v.goSam.Close(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (p *SAMMultiProxy) freshTransport() *http.Transport {
-	if p.clients["general"] == nil {
-		p.clients["general"] = &samClient{}
-		p.clients["general"].goSam, _ = p.freshGoSAMClient()
+func (p *SAMMultiProxy) freshTransport(key string) *http.Transport {
+	//var err error
+	if p.clients[key] == nil {
+		p.clients[key] = &samClient{}
+		p.clients[key].goSam, _ = p.freshGoSAMClient()
 	}
+
 	t := http.Transport{
-		DialContext:           p.clients["general"].goSam.DialContext,
+		DialContext:           p.clients[key].goSam.DialContext,
 		MaxConnsPerHost:       1,
 		MaxIdleConns:          0,
 		MaxIdleConnsPerHost:   1,
@@ -198,23 +205,23 @@ func (p *SAMMultiProxy) freshTransport() *http.Transport {
 	return &t
 }
 
-func (p *SAMMultiProxy) freshClient() *http.Client {
+func (p *SAMMultiProxy) freshClient(key string) *http.Client {
 	return &http.Client{
-		Transport:     p.freshTransport(),
+		Transport:     p.freshTransport(key),
 		Timeout:       time.Second * 300,
 		CheckRedirect: nil,
 	}
 }
 
-func (p *SAMMultiProxy) freshSAMClient() (*samClient, error) {
+func (p *SAMMultiProxy) freshSAMClient(key string) (*samClient, error) {
 	var s samClient
 	var err error
 	s.goSam, err = p.freshGoSAMClient()
 	if err != nil {
 		return nil, err
 	}
-	s.transport = p.freshTransport()
-	s.client = p.freshClient()
+	s.transport = p.freshTransport(key)
+	s.client = p.freshClient(key)
 	return &s, nil
 }
 
@@ -296,8 +303,8 @@ func (p *SAMMultiProxy) reset(wr http.ResponseWriter, req *http.Request) {
 func (p *SAMMultiProxy) get(wr http.ResponseWriter, req *http.Request) {
 	req.RequestURI = ""
 	proxycommon.DelHopHeaders(req.Header)
-	client := p.Signin(wr, req)
-    resp, err := client.client.Do(req)
+	client, req := p.Signin(wr, req)
+	resp, err := client.client.Do(req)
 	if err != nil {
 		msg := "Proxy Error " + err.Error()
 		if !Quiet {
@@ -315,8 +322,8 @@ func (p *SAMMultiProxy) get(wr http.ResponseWriter, req *http.Request) {
 
 func (p *SAMMultiProxy) connect(wr http.ResponseWriter, req *http.Request) {
 	plog("CONNECT via i2p to", req.URL.Host)
-	client := p.Signin(wr, req)
-    dest_conn, err := client.goSam.Dial("tcp", req.URL.Host)
+	client, req := p.Signin(wr, req)
+	dest_conn, err := client.goSam.Dial("tcp", req.URL.Host)
 	if err != nil {
 		if !Quiet {
 			http.Error(wr, err.Error(), http.StatusServiceUnavailable)
@@ -390,8 +397,8 @@ func (handler *SAMMultiProxy) Load() (samtunnel.SAMTunnel, error) {
 	if err != nil {
 		return nil, err
 	}
-	handler.clients["general"].transport = handler.freshTransport()
-	handler.clients["general"].client = handler.freshClient()
+	handler.clients["general"].transport = handler.freshTransport("general")
+	handler.clients["general"].client = handler.freshClient("general")
 	handler.up = true
 	return handler, nil
 }
