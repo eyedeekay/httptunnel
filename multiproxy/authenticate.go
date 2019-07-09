@@ -2,11 +2,11 @@ package i2pbrowserproxy
 
 import (
 	"bytes"
-    "encoding/base64"
+	"encoding/base64"
 	"io/ioutil"
 	"log"
 	"net/http"
-    "strings"
+	"strings"
 )
 
 // Create a struct that models the structure of a user, both in the request body, and in the DB
@@ -20,7 +20,7 @@ func ProxyBasicAuth(r *http.Request) (username, password string, ok bool) {
 	if auth == "" {
 		return
 	}
-    return parseBasicAuth(auth)
+	return parseBasicAuth(auth)
 }
 
 func parseBasicAuth(auth string) (username, password string, ok bool) {
@@ -56,8 +56,6 @@ func DecodeIdentity(body *http.Request) (*http.Request, *Credentials, error) {
 	creds.User, creds.Site, ok = ProxyBasicAuth(body)
 	if ok {
 		log.Println("OK", creds.User, creds.Site)
-	} else {
-		log.Println("NOT OK", creds.User, creds.Site)
 	}
 	return req, &creds, nil
 }

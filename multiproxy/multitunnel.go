@@ -302,9 +302,9 @@ func (p *SAMMultiProxy) reset(wr http.ResponseWriter, req *http.Request) {
 
 func (p *SAMMultiProxy) get(wr http.ResponseWriter, req *http.Request) {
 	req.RequestURI = ""
-    proxycommon.DelHopHeaders(req.Header)
 	client, req := p.Signin(wr, req)
-    resp, err := client.client.Do(req)
+	proxycommon.DelHopHeaders(req.Header)
+	resp, err := client.client.Do(req)
 	if err != nil {
 		msg := "Proxy Error " + err.Error()
 		if !Quiet {
