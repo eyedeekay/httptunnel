@@ -114,7 +114,7 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		WriteTimeout:      600 * time.Second,
 		Addr:              cln.Addr().String(),
 	}
-	ctrlsrv.Handler, err = NewSAMHTTPController(profiles, nil)
+	ctrlsrv.Handler, err = NewSAMHTTPController(profiles, srv)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)

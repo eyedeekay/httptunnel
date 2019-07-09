@@ -1,0 +1,299 @@
+commit 22e78696eaf06eb6b5a5e3f479f3b258e2eda60b
+Author: idk <idk@idk.local>
+Date:   Fri Jun 28 23:41:18 2019 -0400
+
+    improve reload requests
+
+commit 654092efb23f2fd9b097a6adc22339c22d0b1939
+Author: idk <idk@idk.local>
+Date:   Fri Jun 28 23:40:44 2019 -0400
+
+    improve reload requests
+
+commit a870b7224a45f36221593df288734c136c1fbfe0
+Author: idk <idk@idk.local>
+Date:   Fri Jun 28 22:21:22 2019 -0400
+
+    fix windows thing
+
+commit 5516195d5900b5dcf59e88e2eb157377421a90a0
+Author: idk <idk@idk.local>
+Date:   Sun Jun 9 23:09:52 2019 -0400
+
+    add function to convert to sam3 keys
+
+commit 1cb017392523b43796907a77019f1f6d65f4466d
+Author: idk <idk@idk.local>
+Date:   Sat May 18 11:23:44 2019 -0400
+
+    move to new interface/load function
+
+commit dd3082bf85b7d677751590b9ac359113ff81bc08
+Author: idk <idk@idk.local>
+Date:   Fri May 17 20:07:18 2019 -0400
+
+    update to new interface
+
+commit 4974744a66cf670cbc868d734e889c304f3b8c8f
+Author: idk <idk@idk.local>
+Date:   Sat May 11 22:36:34 2019 -0400
+
+    gofmt
+
+commit 2dda6d1197c92cfc40dfd84825e2bba184581ec6
+Author: idk <idk@idk.local>
+Date:   Sat May 11 22:35:04 2019 -0400
+
+    fix timeout minimums
+
+commit 1b0c4ad512c0ac57c83a13524e115199604c12a0
+Author: idk <idk@idk.local>
+Date:   Thu Apr 25 23:55:04 2019 -0400
+
+    add ability to query props
+
+commit bd8dc655d14d6c9befa7efd69d824afbafdc9a06
+Author: idk <idk@idk.local>
+Date:   Thu Apr 25 23:51:14 2019 -0400
+
+    add ability to query props
+
+commit 9c9accef5d53d89b4f5987ab8f775618ab8b1e0b
+Author: idk <idk@idk.local>
+Date:   Sun Apr 21 10:54:07 2019 -0400
+
+    implement the tunnel interface for sam-forwarder
+
+commit d3ba6b47cb2c4df1b97d8cd81781232f12428d0b
+Author: idk <idk@idk.local>
+Date:   Thu Apr 11 22:24:09 2019 -0400
+
+    fix page
+
+commit cc03b14338a5b0abfdc007f92d9ffbb488a60535
+Author: idk <idk@idk.local>
+Date:   Sun Apr 7 23:53:14 2019 -0400
+
+    random ports when used as an application proxy
+
+commit 40a6fed3935f4fc7429390ffcfaeecba99074755
+Author: idk <idk@idk.local>
+Date:   Sun Apr 7 23:53:07 2019 -0400
+
+    random ports when used as an application proxy
+
+commit e485cd6939f0c576432b04ecc2833150a7ba4079
+Author: idk <idk@idk.local>
+Date:   Sun Apr 7 21:58:36 2019 -0400
+
+    that's kind of neat
+
+commit 18fb59408aebd27e32ddb2ee7e8ee325e6f68802
+Author: idk <idk@idk.local>
+Date:   Sun Apr 7 21:58:26 2019 -0400
+
+    that's kind of neat
+
+commit 6f5ce3c568b7d9e242bd6c30cae5d0f363ac47f9
+Author: idk <idk@idk.local>
+Date:   Sat Mar 16 23:44:24 2019 -0400
+
+    switch to real littleboss
+
+commit 5b83b095953230b6937715b3f6ff4246f9e44fb9
+Author: idk <idk@idk.local>
+Date:   Sat Mar 16 23:43:13 2019 -0400
+
+    switch to real littleboss
+
+commit e458f8737b84de1732ebe508f02d0ba5d62b5035
+Author: idk <idk@idk.local>
+Date:   Sat Mar 16 23:40:59 2019 -0400
+
+    switch to real littleboss
+
+commit b8e4e915bf37c132f8467697dc01137964fc4f46
+Author: idk <idk@idk.local>
+Date:   Tue Mar 12 16:36:29 2019 -0400
+
+    move to make a page
+
+commit 205aba31cc525ce229156709a41825fc9f5cc462
+Author: idk <idk@idk.local>
+Date:   Tue Mar 12 16:35:45 2019 -0400
+
+    move to make a page
+
+commit c702a56fa0f6b0cd90cc3c5f962bf8176b962018
+Author: idk <idk@idk.local>
+Date:   Tue Mar 12 16:06:56 2019 -0400
+
+    add tutorial
+
+commit febeb848f230f175c0c0223a726f8f03986de238
+Author: idk <idk@idk.local>
+Date:   Tue Mar 5 16:09:46 2019 -0500
+
+    add the tutorial
+
+commit 7f9f05f7b3ee5f500b3aa2c262b61b1940e3fbfe
+Author: idk <idk@idk.local>
+Date:   Tue Mar 5 16:08:50 2019 -0500
+
+    add the tutorial
+
+commit 1f83192f18c6a7874addc612caadb94a5ca80e77
+Author: idk <problemsolver@openmailbox.org>
+Date:   Sun Mar 3 18:10:52 2019 -0500
+
+    fix the relative import
+
+commit 4dded46bd100bfcceba4284f41816b81dc108277
+Author: idk <problemsolver@openmailbox.org>
+Date:   Thu Feb 28 13:04:27 2019 -0500
+
+    incorporate fixes and update README A
+
+commit 5f151caa58d36cee6d7964232c5a2fb49d6a782b
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 27 22:01:58 2019 -0500
+
+    optimizations
+
+commit 4d1d3c37a0c63140507ae19fd6bd189ce33fc5d9
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 27 22:01:47 2019 -0500
+
+    optimizations
+
+commit 081b419d1f432757db515546bf1b206b26e8253a
+Author: idk <problemsolver@openmailbox.org>
+Date:   Tue Feb 26 22:40:31 2019 -0500
+
+    fix import
+
+commit f2c56fe622d0bbbed35a420e0c7a837c891a253d
+Author: idk <problemsolver@openmailbox.org>
+Date:   Tue Feb 26 22:36:26 2019 -0500
+
+    move some stuff to common
+
+commit 8ecbe5f1120db095023addf2ac8e292f1f4ba2ec
+Author: idk <problemsolver@openmailbox.org>
+Date:   Sat Feb 23 23:59:34 2019 -0500
+
+    fix missing parenthesis
+
+commit 36e5d7eafc2b89e53f76fa84f0edb71adb29866d
+Author: idk <problemsolver@openmailbox.org>
+Date:   Sat Feb 23 22:36:17 2019 -0500
+
+    fix unhandled error
+
+commit 8c0533ef9403a29dc5a96d8383153fe3dd8efa11
+Author: idk <problemsolver@openmailbox.org>
+Date:   Sat Feb 23 22:30:59 2019 -0500
+
+    add Firefox profile monitoring capability
+
+commit d4989b3592a18cc3a5052a8d81a6448b326b52f7
+Author: idk <problemsolver@openmailbox.org>
+Date:   Thu Feb 21 22:06:59 2019 -0500
+
+    That might work for windows tunnel identity renewals
+
+commit 433ed9234b821b50cb31115317ef5ec09889809d
+Author: idk <problemsolver@openmailbox.org>
+Date:   Thu Feb 21 17:46:33 2019 -0500
+
+    that's pretty cool
+
+commit 03ca188b9d670c9c109eb064a1b37080bcac7fc1
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 23:12:38 2019 -0500
+
+    clear up mains and archive original
+
+commit 1cfc735b5ff9be890a63ff4815c469f564e65311
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 23:01:32 2019 -0500
+
+    abandon js wierdness.
+
+commit 3d938a7df83dd87ea4bc1d836c693138f4c4c4c5
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 21:57:46 2019 -0500
+
+    remove the thing from the other app
+
+commit 76c78de8a1ab9965a0ccfb90d0e0883e57d4dfd3
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 21:51:18 2019 -0500
+
+    Add user-agent rewriting
+
+commit 1d2a1591c03acb32a200339525cf7c5d59bc51d9
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 21:47:11 2019 -0500
+
+    finally fix it.
+
+commit 97af735f007a408747ca845620efaceed0cf1262
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 21:42:37 2019 -0500
+
+    fix the right problem instead. Maybe.
+
+commit 653f7fe1c19a566b4673501db6d7038944a719fd
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 21:38:54 2019 -0500
+
+    fix the right problem instead. Maybe.
+
+commit 0dc9199d123b973636887b719c4aedaee1ca35e5
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 20:55:53 2019 -0500
+
+    I wonder what I can do with that...
+
+commit 125299910703cec2c3159bdd76c3e120f6c6243a
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 20:44:37 2019 -0500
+
+    added a makefile and made it self-supervising.
+
+commit 96cbeb2fe8ea0cb4afbbe04805b63e1964a1a43a
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 20:42:21 2019 -0500
+
+    added a makefile and made it self-supervising.
+
+commit f5e82770a8ca10a12af4efc3473f5b697529d567
+Author: idk <problemsolver@openmailbox.org>
+Date:   Wed Feb 20 20:40:51 2019 -0500
+
+    added a makefile and made it self-supervising.
+
+commit 5b8824c0561ca11724674f88a3b90df77452c52a
+Author: idk <problemsolver@openmailbox.org>
+Date:   Tue Feb 19 23:23:31 2019 -0500
+
+    move command
+
+commit f4cccb9f81e05efb9737d8ace4d87094de20ab97
+Author: idk <problemsolver@openmailbox.org>
+Date:   Tue Feb 19 22:30:42 2019 -0500
+
+    Woot. Now any application that needs one can programatically start it's own http-over-i2p proxy.
+
+commit 9650b44f22a2d7739a67b48fcbf774e2e32e1bbb
+Author: idk <problemsolver@openmailbox.org>
+Date:   Tue Feb 19 21:54:12 2019 -0500
+
+    basic version
+
+commit ca4763061177b04314b840e459a7804d8788b5cd
+Author: idk <eyedeekay@safe-mail.net>
+Date:   Tue Feb 19 20:37:14 2019 -0500
+
+    Initial commit

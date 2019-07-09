@@ -8,7 +8,7 @@ opall: fmt opwin oplin oplinarm opmac
 all: httpall opall
 
 fmt:
-	gofmt -w *.go */*.go
+	find . -name '*.go' -exec gofmt -w {} \;
 
 dep:
 	go get -u github.com/eyedeekay/httptunnel/httpproxy
