@@ -10,8 +10,8 @@ var hopHeaders = []string{
 	"Accept-Language",
 	"Connection",
 	"Keep-Alive",
-	"Proxy-Authenticate",
-	"Proxy-Authorization",
+	//	"Proxy-Authenticate",
+	//	"Proxy-Authorization",
 	"Proxy-Connection",
 	"Trailers",
 	"Upgrade",
@@ -27,7 +27,11 @@ func Transfer(destination io.WriteCloser, source io.ReadCloser) {
 }
 
 func DelHopHeaders(header http.Header) {
+    for k, h := range header {
+        log.Println("HEADER",k, h)
+    }
 	for _, h := range hopHeaders {
+        //log.Println(h)
 		header.Del(h)
 	}
 	if header.Get("User-Agent") != "MYOB/6.66 (AN/ON)" {

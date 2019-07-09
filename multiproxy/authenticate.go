@@ -2,56 +2,67 @@ package i2pbrowserproxy
 
 import (
 	"bytes"
-	"crypto/rand"
-	"encoding/base64"
-	"encoding/json"
+    "encoding/base64"
 	"io/ioutil"
-	//"fmt"
-	"net/http"
-	//"time"
 	"log"
+	"net/http"
+    "strings"
 )
 
 // Create a struct that models the structure of a user, both in the request body, and in the DB
 type Credentials struct {
-	Site string `json:"identity"`
+	User string
+	Site string
 }
 
-func GenerateRandomBytes(n int) ([]byte, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
-		return nil, err
+func ProxyBasicAuth(r *http.Request) (username, password string, ok bool) {
+	auth := r.Header.Get("Proxy-Authorization")
+	if auth == "" {
+		return
 	}
-	return b, nil
+    return parseBasicAuth(auth)
 }
 
-func GenerateRandomString(s int) (string, error) {
-	b, err := GenerateRandomBytes(s)
-	return base64.URLEncoding.EncodeToString(b), err
-}
+func parseBasicAuth(auth string) (username, password string, ok bool) {
+	const prefix = "Basic "
+	// Case insensitive prefix match. See Issue 22736.
+	if len(auth) < len(prefix) || !strings.EqualFold(auth[:len(prefix)], prefix) {
+		return
+	}
+	c, err := base64.StdEncoding.DecodeString(auth[len(prefix):])
+	if err != nil {
+		return
+	}
+	cs := string(c)
+	s := strings.IndexByte(cs, ':')
+	if s < 0 {
+		return
+	}
+	return cs[:s], cs[s+1:], true
 
+}
 func DecodeIdentity(body *http.Request) (*http.Request, *Credentials, error) {
 	var creds Credentials
 	bb, err := ioutil.ReadAll(body.Body)
 	if err != nil {
-		return nil, nil, err
+		return body, &creds, err
 	}
 
 	req, err := http.NewRequest(body.Method, body.URL.String(), bytes.NewReader(bb))
 	if err != nil {
-		return nil, nil, err
+		return req, &creds, err
 	}
-
-	err = json.NewDecoder(bytes.NewReader(bb)).Decode(&creds)
-	if err != nil {
-		return nil, nil, err
+	var ok bool
+	creds.User, creds.Site, ok = ProxyBasicAuth(body)
+	if ok {
+		log.Println("OK", creds.User, creds.Site)
+	} else {
+		log.Println("NOT OK", creds.User, creds.Site)
 	}
 	return req, &creds, nil
 }
 
 func (m *SAMMultiProxy) Signin(w http.ResponseWriter, r *http.Request) (*samClient, *http.Request) {
-
 	if m.aggressive {
 		return m.findClient(r.Host), r
 	}

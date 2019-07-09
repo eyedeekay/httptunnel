@@ -162,8 +162,7 @@ opmac32:
 		./outproxy/cmd/main.go
 	@echo "built"
 
-req:
+ureq:
 	http_proxy=http://127.0.0.1:7950 \
-	curl --header "Content-Type: application/json" \
-		--data '{"identity":"xyz"}' \
-		http://inr.i2p
+	wget -d --auth-no-challenge --proxy-user user --proxy-password password \
+		http://inr.i2p -O /dev/null 2>&1 | less -rN
