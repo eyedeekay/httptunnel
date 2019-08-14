@@ -70,6 +70,7 @@ func parseBasicAuth(auth string) (username, password string, ok bool) {
 	return cs[:s], cs[s+1:], true
 
 }
+
 // End copied part
 
 func DecodeIdentity(body *http.Request) (*http.Request, *Credentials, error) {

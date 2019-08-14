@@ -1,11 +1,18 @@
 
+GO111MODULE=on
+
 GO_COMPILER_OPTS = -a -tags netgo -ldflags '-w -extldflags "-static"'
 
 httpall: fmt win lin linarm mac
 
+include multiproxy/Makefile
+
 opall: fmt opwin oplin oplinarm opmac
 
-all: httpall opall
+ball:
+	cd multiproxy && make all
+
+all: httpall opall ball
 
 fmt:
 	find . -name '*.go' -exec gofmt -w {} \;
@@ -89,7 +96,7 @@ vet:
 	go vet ./httpproxy/*.go
 	go vet ./windows/*.go
 
-clean:
+clean: bclean
 	rm -f httpproxy-* outproxy-* *.exe *.log *.js *.map
 
 opwin: opwin32 opwin64

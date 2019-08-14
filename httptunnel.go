@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -18,6 +19,7 @@ import (
 	"github.com/eyedeekay/goSam"
 	"github.com/eyedeekay/goSam/compat"
 	"github.com/eyedeekay/httptunnel/common"
+	"github.com/eyedeekay/sam-forwarder/hashhash"
 	"github.com/eyedeekay/sam-forwarder/i2pkeys"
 	"github.com/eyedeekay/sam-forwarder/interface"
 	"github.com/eyedeekay/sam3/i2pkeys"
@@ -25,6 +27,7 @@ import (
 
 type SAMHTTPProxy struct {
 	goSam              *goSam.Client
+	Hasher             *hashhash.Hasher
 	client             *http.Client
 	transport          *http.Transport
 	rateLimiter        *rate.Limiter
@@ -123,6 +126,15 @@ func (p *SAMHTTPProxy) Target() string {
 
 func (p *SAMHTTPProxy) Base32() string {
 	return p.goSam.Base32()
+}
+
+// Base32Readable returns the base32 address where the local service is being
+// forwarded, but as a list of English words(More languages later if it works)
+// instead of as a hash for person-to-person transmission.
+func (f *SAMHTTPProxy) Base32Readable() string {
+	b32 := strings.Replace(f.Base32(), ".b32.i2p", "", 1)
+	rhash, _ := f.Hasher.Friendly(b32)
+	return rhash + " " + strconv.Itoa(len(b32))
 }
 
 func (p *SAMHTTPProxy) Base64() string {
@@ -339,6 +351,10 @@ func (handler *SAMHTTPProxy) Load() (samtunnel.SAMTunnel, error) {
 	}
 	handler.transport = handler.freshTransport()
 	handler.client = handler.freshClient()
+	handler.Hasher, err = hashhash.NewHasher(len(strings.Replace(handler.Base32(), ".b32.i2p", "", 1)))
+	if err != nil {
+		return nil, err
+	}
 	handler.up = true
 	return handler, nil
 }

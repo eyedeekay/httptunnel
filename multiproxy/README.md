@@ -25,6 +25,6 @@ to a "general" tunnel which behaves almost exactly as httptunnel in the parent
 directory or the http proxies in I2P and i2pd.
 
 It also has an aggressive mode, which creates a whole new tunnel pool for every
-single eepSite you visit, by domain(which means that if you visit bote the
+single eepSite you visit, by domain(which means that if you visit both the
 base32 and readable domain, it will create *two* destinations). I advise against
 using it.
