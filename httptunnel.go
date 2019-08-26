@@ -258,6 +258,13 @@ func SetupProxy(addr string) {
 	os.Setenv("ALL_PROXY", "http://"+addr)
 }
 
+// UnProxyLocal adds local IP addresses to an un-proxied range. It is not used
+// here but is useful for some servers.
+func UnProxyLocal() {
+	os.SetEnv("no_proxy", "127.0.0.1,localhost")
+	os.SetEnv("oO_PROXY", "127.0.0.1,localhost")
+}
+
 func (p *SAMHTTPProxy) reset(wr http.ResponseWriter, req *http.Request) {
 	plog("Validating control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
 	if strings.SplitN(req.RemoteAddr, ":", 2)[0] == p.controlHost {
