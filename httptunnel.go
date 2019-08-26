@@ -262,7 +262,7 @@ func SetupProxy(addr string) {
 // here but is useful for some servers.
 func UnProxyLocal() {
 	os.Setenv("no_proxy", "127.0.0.1,localhost")
-	os.Setenv("oO_PROXY", "127.0.0.1,localhost")
+	os.Setenv("NO_PROXY", "127.0.0.1,localhost")
 }
 
 func (p *SAMHTTPProxy) reset(wr http.ResponseWriter, req *http.Request) {
