@@ -137,14 +137,6 @@ func SetControlHost(s string) func(*SAMHTTPProxy) error {
 	}
 }
 
-//SetKeysPath sets the path to the key save files
-func SetKeysPath(s string) func(*SAMHTTPProxy) error {
-	return func(c *SAMHTTPProxy) error {
-		c.keyspath = s
-		return nil
-	}
-}
-
 //SetContrlPort sets the host of the client's Proxy controller
 func SetControlPort(s string) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
@@ -157,6 +149,37 @@ func SetControlPort(s string) func(*SAMHTTPProxy) error {
 			return nil
 		}
 		return fmt.Errorf("Invalid port")
+	}
+}
+
+//SetProxyHost sets the host of the client's Proxy controller
+func SetProxyHost(s string) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		c.proxyHost = s
+		return nil
+	}
+}
+
+//SetProxyPort sets the host of the client's Proxy controller
+func SetProxyPort(s string) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		port, err := strconv.Atoi(s)
+		if err != nil {
+			return fmt.Errorf("Invalid port; non-number")
+		}
+		if port < 65536 && port > -1 {
+			c.proxyPort = s
+			return nil
+		}
+		return fmt.Errorf("Invalid port")
+	}
+}
+
+//SetKeysPath sets the path to the key save files
+func SetKeysPath(s string) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		c.keyspath = s
+		return nil
 	}
 }
 

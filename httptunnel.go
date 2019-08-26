@@ -241,6 +241,23 @@ func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 
 }
 
+// SetupProxy sets proxy environment variables based on the settings in use by the proxy
+func (p *SAMHTTPProxy) SetupProxy() {
+	SetupProxy(p.Target())
+}
+
+// SetupProxy sets proxy environment variables based on a string address
+func SetupProxy(addr string) {
+	os.Setenv("http_proxy", "http://"+addr)
+	os.Setenv("https_proxy", "http://"+addr)
+	os.Setenv("ftp_proxy", "http://"+addr)
+	os.Setenv("all_proxy", "http://"+addr)
+	os.Setenv("HTTP_PROXY", "http://"+addr)
+	os.Setenv("HTTPS_PROXY", "http://"+addr)
+	os.Setenv("FTP_PROXY", "http://"+addr)
+	os.Setenv("ALL_PROXY", "http://"+addr)
+}
+
 func (p *SAMHTTPProxy) reset(wr http.ResponseWriter, req *http.Request) {
 	plog("Validating control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
 	if strings.SplitN(req.RemoteAddr, ":", 2)[0] == p.controlHost {
