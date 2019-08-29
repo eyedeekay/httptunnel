@@ -260,9 +260,13 @@ func SetupProxy(addr string) {
 
 // UnProxyLocal adds local IP addresses to an un-proxied range. It is not used
 // here but is useful for some servers.
-func UnProxyLocal() {
-	os.Setenv("no_proxy", "127.0.0.1,localhost")
-	os.Setenv("NO_PROXY", "127.0.0.1,localhost")
+func UnProxyLocal(additionalAddresses []string) {
+	add := ""
+	for _, v := range additionalAddresses {
+		add += "," + v
+	}
+	os.Setenv("no_proxy", "127.0.0.1,localhost"+add)
+	os.Setenv("NO_PROXY", "127.0.0.1,localhost"+add)
 }
 
 func (p *SAMHTTPProxy) reset(wr http.ResponseWriter, req *http.Request) {
