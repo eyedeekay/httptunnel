@@ -77,18 +77,19 @@ func DecodeIdentity(body *http.Request) (*http.Request, *Credentials, error) {
 	var creds Credentials
 	bb, err := ioutil.ReadAll(body.Body)
 	if err != nil {
-		return body, &creds, err
+		return nil, nil, err
 	}
 
 	req, err := http.NewRequest(body.Method, body.URL.String(), bytes.NewReader(bb))
 	if err != nil {
-		return req, &creds, err
+		return nil, nil, err
 	}
 	var ok bool
 	creds.User, creds.Site, ok = ProxyBasicAuth(body)
 	if ok {
 		log.Println("OK", creds.User, creds.Site)
 	}
+	creds.User += body.RemoteAddr
 	return req, &creds, nil
 }
 
