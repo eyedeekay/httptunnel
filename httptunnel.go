@@ -19,11 +19,11 @@ import (
 	"github.com/eyedeekay/goSam"
 	"github.com/eyedeekay/goSam/compat"
 	"github.com/eyedeekay/httptunnel/common"
+	"github.com/eyedeekay/sam-forwarder/config"
 	"github.com/eyedeekay/sam-forwarder/hashhash"
 	"github.com/eyedeekay/sam-forwarder/i2pkeys"
 	"github.com/eyedeekay/sam-forwarder/interface"
 	"github.com/eyedeekay/sam3/i2pkeys"
-    "github.com/eyedeekay/sam-forwarder/config"
 )
 
 type SAMHTTPProxy struct {
@@ -65,7 +65,7 @@ type SAMHTTPProxy struct {
 	debug  bool
 	up     bool
 
-    Conf *i2ptunconf.Conf
+	Conf *i2ptunconf.Conf
 }
 
 var Quiet bool
@@ -77,7 +77,7 @@ func plog(in ...interface{}) {
 }
 
 func (f *SAMHTTPProxy) Config() *i2ptunconf.Conf {
-    return f.Conf
+	return f.Conf
 }
 
 func (f *SAMHTTPProxy) print() []string {
