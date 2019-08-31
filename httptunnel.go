@@ -23,6 +23,7 @@ import (
 	"github.com/eyedeekay/sam-forwarder/i2pkeys"
 	"github.com/eyedeekay/sam-forwarder/interface"
 	"github.com/eyedeekay/sam3/i2pkeys"
+    "github.com/eyedeekay/sam-forwarder/config"
 )
 
 type SAMHTTPProxy struct {
@@ -63,6 +64,8 @@ type SAMHTTPProxy struct {
 	dialed bool
 	debug  bool
 	up     bool
+
+    Conf *i2ptunconf.Conf
 }
 
 var Quiet bool
@@ -71,6 +74,10 @@ func plog(in ...interface{}) {
 	if !Quiet {
 		log.Println(in...)
 	}
+}
+
+func (f *SAMHTTPProxy) Config() *i2ptunconf.Conf {
+    return f.Conf
 }
 
 func (f *SAMHTTPProxy) print() []string {

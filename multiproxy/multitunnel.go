@@ -19,6 +19,7 @@ import (
 	"github.com/eyedeekay/goSam"
 	"github.com/eyedeekay/goSam/compat"
 	"github.com/eyedeekay/httptunnel/common"
+	"github.com/eyedeekay/sam-forwarder/config"
 	"github.com/eyedeekay/sam-forwarder/hashhash"
 	"github.com/eyedeekay/sam-forwarder/i2pkeys"
 	"github.com/eyedeekay/sam-forwarder/interface"
@@ -60,6 +61,8 @@ type SAMMultiProxy struct {
 	reduceIdleQuantity uint
 	compression        bool
 
+	Conf *i2ptunconf.Conf
+
 	useOutProxy bool
 
 	dialed     bool
@@ -70,6 +73,10 @@ type SAMMultiProxy struct {
 }
 
 var Quiet bool
+
+func (f *SAMMultiProxy) Config() *i2ptunconf.Conf {
+	return f.Conf
+}
 
 func (f *SAMMultiProxy) findClient(key string) *samClient {
 	var err error

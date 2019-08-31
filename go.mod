@@ -9,6 +9,7 @@ require (
 	github.com/eyedeekay/sam-forwarder v0.0.0-20190814201550-7c0d7cb0d56c
 	github.com/eyedeekay/sam3 v0.0.0-20190730185140-f8d54526ea25
 	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69 // indirect
+	github.com/zieckey/goini v0.0.0-20180118150432-0da17d361d26 // indirect
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 )
