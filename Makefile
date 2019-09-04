@@ -3,7 +3,14 @@ GO111MODULE=on
 
 GO_COMPILER_OPTS = -a -tags netgo -ldflags '-w -extldflags "-static"'
 
+USER_GH=eyedeekay
+packagename=httptunnel
+VERSION=0.32.04
+
 httpall: fmt win lin linarm mac
+
+tag:
+	gothub release -s $(GITHUB_TOKEN) -u $(USER_GH) -r $(packagename) -t v$(VERSION) -d "I2P Tunnel Management tool for Go applications"
 
 include multiproxy/Makefile
 
@@ -11,6 +18,9 @@ opall: fmt opwin oplin oplinarm opmac
 
 ball:
 	cd multiproxy && make all
+
+blin64:
+	cd multiproxy && make blin64
 
 all: httpall opall ball
 

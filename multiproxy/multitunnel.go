@@ -34,32 +34,8 @@ type samClient struct {
 }
 
 type SAMMultiProxy struct {
-	clients            map[string]*samClient
-	Hasher             *hashhash.Hasher
-	tunName            string
-	sigType            string
-	proxyHost          string
-	proxyPort          string
-	SamHost            string
-	SamPort            string
-	controlHost        string
-	controlPort        string
-	destination        string
-	keyspath           string
-	inLength           uint
-	outLength          uint
-	inVariance         int
-	outVariance        int
-	inQuantity         uint
-	outQuantity        uint
-	inBackups          uint
-	outBackups         uint
-	dontPublishLease   bool
-	encryptLease       bool
-	reduceIdle         bool
-	reduceIdleTime     uint
-	reduceIdleQuantity uint
-	compression        bool
+	clients map[string]*samClient
+	Hasher  *hashhash.Hasher
 
 	Conf *i2ptunconf.Conf
 
@@ -110,7 +86,7 @@ func (f *SAMMultiProxy) GetType() string {
 }
 
 func (f *SAMMultiProxy) ID() string {
-	return f.tunName
+	return f.Conf.TunName
 }
 
 func (p *SAMMultiProxy) Keys() i2pkeys.I2PKeys {
@@ -153,7 +129,7 @@ func (p *SAMMultiProxy) Search(search string) string {
 }
 
 func (p *SAMMultiProxy) Target() string {
-	return p.proxyHost + ":" + p.proxyPort
+	return p.Conf.TargetHost + ":" + p.Conf.TargetPort
 }
 
 func (p *SAMMultiProxy) Base32() string {
@@ -174,7 +150,7 @@ func (p *SAMMultiProxy) Base64() string {
 }
 
 func (p *SAMMultiProxy) Serve() error {
-	ln, err := net.Listen("tcp", p.proxyHost+":"+p.proxyPort)
+	ln, err := net.Listen("tcp", p.Conf.TargetHost+":"+p.Conf.TargetPort)
 	if err != nil {
 		return err
 	}
@@ -250,27 +226,27 @@ func (p *SAMMultiProxy) freshSAMClient(key string) (*samClient, error) {
 
 func (p *SAMMultiProxy) freshGoSAMClient() (*goSam.Client, error) {
 	return goSam.NewClientFromOptions(
-		goSam.SetHost(p.SamHost),
-		goSam.SetPort(p.SamPort),
-		goSam.SetUnpublished(p.dontPublishLease),
-		goSam.SetInLength(p.inLength),
-		goSam.SetOutLength(p.outLength),
-		goSam.SetInQuantity(p.inQuantity),
-		goSam.SetOutQuantity(p.outQuantity),
-		goSam.SetInBackups(p.inBackups),
-		goSam.SetOutBackups(p.outBackups),
-		goSam.SetReduceIdle(p.reduceIdle),
-		goSam.SetReduceIdleTime(p.reduceIdleTime),
-		goSam.SetReduceIdleQuantity(p.reduceIdleQuantity),
-		goSam.SetCompression(p.compression),
+		goSam.SetHost(p.Conf.SamHost),
+		goSam.SetPort(p.Conf.SamPort),
+		goSam.SetUnpublished(p.Conf.Client),
+		goSam.SetInLength(uint(p.Conf.InLength)),
+		goSam.SetOutLength(uint(p.Conf.OutLength)),
+		goSam.SetInQuantity(uint(p.Conf.InQuantity)),
+		goSam.SetOutQuantity(uint(p.Conf.OutQuantity)),
+		goSam.SetInBackups(uint(p.Conf.InBackupQuantity)),
+		goSam.SetOutBackups(uint(p.Conf.OutBackupQuantity)),
+		goSam.SetReduceIdle(p.Conf.ReduceIdle),
+		goSam.SetReduceIdleTime(uint(p.Conf.ReduceIdleTime)),
+		goSam.SetReduceIdleQuantity(uint(p.Conf.ReduceIdleQuantity)),
+		goSam.SetCompression(p.Conf.UseCompression),
 		goSam.SetDebug(p.debug),
-		goSam.SetLocalDestination(p.destination),
+		goSam.SetLocalDestination(p.Conf.ClientDest),
 	)
 }
 
 //return the combined host:port of the SAM bridge
 func (p *SAMMultiProxy) samaddr() string {
-	return fmt.Sprintf("%s:%s", p.SamHost, p.SamPort)
+	return fmt.Sprintf("%s:%s", p.Conf.SamHost, p.Conf.SamPort)
 }
 
 func (p *SAMMultiProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
@@ -286,7 +262,7 @@ func (p *SAMMultiProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	}
 
 	if !strings.HasSuffix(req.URL.Host, ".i2p") {
-		if req.URL.Host == p.controlHost+":"+p.controlPort {
+		if req.URL.Host == p.Conf.ControlHost+":"+p.Conf.ControlPort {
 			p.reset(wr, req)
 			return
 		}
@@ -309,10 +285,10 @@ func (p *SAMMultiProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 }
 
 func (p *SAMMultiProxy) reset(wr http.ResponseWriter, req *http.Request) {
-	plog("Validating control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
-	if strings.SplitN(req.RemoteAddr, ":", 2)[0] == p.controlHost {
-		plog("Validated control access from", req.RemoteAddr, p.controlHost+":"+p.controlPort)
-		resp, err := http.Get("http://" + p.controlHost + ":" + p.controlPort)
+	plog("Validating control access from", req.RemoteAddr, p.Conf.ControlHost+":"+p.Conf.ControlPort)
+	if strings.SplitN(req.RemoteAddr, ":", 2)[0] == p.Conf.ControlHost {
+		plog("Validated control access from", req.RemoteAddr, p.Conf.ControlHost+":"+p.Conf.ControlPort)
+		resp, err := http.Get("http://" + p.Conf.ControlHost + ":" + p.Conf.ControlPort)
 		if err == nil {
 			wr.Header().Set("Content-Type", "text/html; charset=utf-8")
 			wr.Header().Set("Access-Control-Allow-Origin", "*")
@@ -377,18 +353,18 @@ func (f *SAMMultiProxy) Up() bool {
 }
 
 func (p *SAMMultiProxy) Save() string {
-	if p.keyspath != "invalid.tunkey" {
-		if _, err := os.Stat(p.keyspath); os.IsNotExist(err) {
+	if p.Conf.KeyFilePath != "invalid.tunkey" {
+		if _, err := os.Stat(p.Conf.KeyFilePath); os.IsNotExist(err) {
 			if p.findClient(p.recent).goSam != nil {
 				if p.findClient(p.recent).goSam.Destination() != "" {
-					ioutil.WriteFile(p.keyspath, []byte(p.findClient(p.recent).goSam.Destination()), 0644)
-					p.destination = p.findClient(p.recent).goSam.Destination()
+					ioutil.WriteFile(p.Conf.KeyFilePath, []byte(p.findClient(p.recent).goSam.Destination()), 0644)
+					p.Conf.ClientDest = p.findClient(p.recent).goSam.Destination()
 					return p.findClient(p.recent).goSam.Destination()
 				}
 			}
 		} else {
-			if keys, err := ioutil.ReadFile(p.keyspath); err == nil {
-				p.destination = string(keys)
+			if keys, err := ioutil.ReadFile(p.Conf.KeyFilePath); err == nil {
+				p.Conf.ClientDest = string(keys)
 				return string(keys)
 			}
 		}
@@ -398,24 +374,24 @@ func (p *SAMMultiProxy) Save() string {
 
 func (handler *SAMMultiProxy) Load() (samtunnel.SAMTunnel, error) {
 	var err error
-	handler.destination = handler.Save()
+	handler.Conf.ClientDest = handler.Save()
 	handler.clients["general"] = &samClient{}
 	handler.clients["general"].goSam, err = goSam.NewClientFromOptions(
-		goSam.SetHost(handler.SamHost),
-		goSam.SetPort(handler.SamPort),
-		goSam.SetUnpublished(handler.dontPublishLease),
-		goSam.SetInLength(handler.inLength),
-		goSam.SetOutLength(handler.outLength),
-		goSam.SetInQuantity(handler.inQuantity),
-		goSam.SetOutQuantity(handler.outQuantity),
-		goSam.SetInBackups(handler.inBackups),
-		goSam.SetOutBackups(handler.outBackups),
-		goSam.SetReduceIdle(handler.reduceIdle),
-		goSam.SetReduceIdleTime(handler.reduceIdleTime),
-		goSam.SetReduceIdleQuantity(handler.reduceIdleQuantity),
-		goSam.SetCompression(handler.compression),
+		goSam.SetHost(handler.Conf.SamHost),
+		goSam.SetPort(handler.Conf.SamPort),
+		goSam.SetUnpublished(handler.Conf.Client),
+		goSam.SetInLength(uint(handler.Conf.InLength)),
+		goSam.SetOutLength(uint(handler.Conf.OutLength)),
+		goSam.SetInQuantity(uint(handler.Conf.InQuantity)),
+		goSam.SetOutQuantity(uint(handler.Conf.OutQuantity)),
+		goSam.SetInBackups(uint(handler.Conf.InBackupQuantity)),
+		goSam.SetOutBackups(uint(handler.Conf.OutBackupQuantity)),
+		goSam.SetReduceIdle(handler.Conf.ReduceIdle),
+		goSam.SetReduceIdleTime(uint(handler.Conf.ReduceIdleTime)),
+		goSam.SetReduceIdleQuantity(uint(handler.Conf.ReduceIdleQuantity)),
+		goSam.SetCompression(handler.Conf.UseCompression),
 		goSam.SetDebug(handler.debug),
-		goSam.SetLocalDestination(handler.destination),
+		goSam.SetLocalDestination(handler.Conf.ClientDest),
 	)
 	if err != nil {
 		return nil, err
@@ -432,30 +408,9 @@ func (handler *SAMMultiProxy) Load() (samtunnel.SAMTunnel, error) {
 
 func NewHttpProxy(opts ...func(*SAMMultiProxy) error) (*SAMMultiProxy, error) {
 	var handler SAMMultiProxy
-	handler.SamHost = "127.0.0.1"
-	handler.SamPort = "7656"
-	handler.controlHost = "127.0.0.1"
-	handler.controlPort = "7951"
-	handler.proxyHost = "127.0.0.1"
-	handler.proxyPort = "7950"
-	handler.inLength = 2
-	handler.outLength = 2
-	handler.inVariance = 0
-	handler.outVariance = 0
-	handler.inQuantity = 1
-	handler.outQuantity = 1
-	handler.inBackups = 1
-	handler.outBackups = 1
-	handler.dontPublishLease = true
-	handler.encryptLease = false
-	handler.reduceIdle = false
-	handler.reduceIdleTime = 2000000
-	handler.reduceIdleQuantity = 1
-	handler.useOutProxy = false
-	handler.compression = true
-	handler.tunName = "0"
-	handler.keyspath = "invalid.tunkey"
-	handler.destination = ""
+	handler.Conf = &i2ptunconf.Conf{}
+	handler.Conf.SamHost = "127.0.0.1"
+	handler.Conf.SamPort = "7656"
 	handler.clients = make(map[string]*samClient)
 	handler.recent = "general"
 	handler.aggressive = false

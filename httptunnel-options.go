@@ -13,7 +13,7 @@ type Option func(*SAMHTTPProxy) error
 //SetName sets a clients's address in the form host:port or host, port
 func SetName(s string) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		c.tunName = s
+		c.Conf.TunName = s
 		return nil
 	}
 }
@@ -26,8 +26,8 @@ func SetAddr(s ...string) func(*SAMHTTPProxy) error {
 			if len(split) == 2 {
 				if i, err := strconv.Atoi(split[1]); err == nil {
 					if i < 65536 {
-						c.SamHost = split[0]
-						c.SamPort = split[1]
+						c.Conf.SamHost = split[0]
+						c.Conf.SamPort = split[1]
 						return nil
 					}
 					return fmt.Errorf("Invalid port")
@@ -38,8 +38,8 @@ func SetAddr(s ...string) func(*SAMHTTPProxy) error {
 		} else if len(s) == 2 {
 			if i, err := strconv.Atoi(s[1]); err == nil {
 				if i < 65536 {
-					c.SamHost = s[0]
-					c.SamPort = s[1]
+					c.Conf.SamHost = s[0]
+					c.Conf.SamPort = s[1]
 					return nil
 				}
 				return fmt.Errorf("Invalid port")
@@ -59,8 +59,8 @@ func SetControlAddr(s ...string) func(*SAMHTTPProxy) error {
 			if len(split) == 2 {
 				if i, err := strconv.Atoi(split[1]); err == nil {
 					if i < 65536 {
-						c.controlHost = split[0]
-						c.controlPort = split[1]
+						c.Conf.ControlHost = split[0]
+						c.Conf.ControlPort = split[1]
 						return nil
 					}
 					return fmt.Errorf("Invalid port")
@@ -71,8 +71,8 @@ func SetControlAddr(s ...string) func(*SAMHTTPProxy) error {
 		} else if len(s) == 2 {
 			if i, err := strconv.Atoi(s[1]); err == nil {
 				if i < 65536 {
-					c.controlHost = s[0]
-					c.controlPort = s[1]
+					c.Conf.ControlHost = s[0]
+					c.Conf.ControlPort = s[1]
 					return nil
 				}
 				return fmt.Errorf("Invalid port")
@@ -92,8 +92,8 @@ func SetProxyAddr(s ...string) func(*SAMHTTPProxy) error {
 			if len(split) == 2 {
 				if i, err := strconv.Atoi(split[1]); err == nil {
 					if i < 65536 {
-						c.proxyHost = split[0]
-						c.proxyPort = split[1]
+						c.Conf.TargetHost = split[0]
+						c.Conf.TargetPort = split[1]
 						return nil
 					}
 					return fmt.Errorf("Invalid port")
@@ -104,8 +104,8 @@ func SetProxyAddr(s ...string) func(*SAMHTTPProxy) error {
 		} else if len(s) == 2 {
 			if i, err := strconv.Atoi(s[1]); err == nil {
 				if i < 65536 {
-					c.proxyHost = s[0]
-					c.proxyPort = s[1]
+					c.Conf.TargetHost = s[0]
+					c.Conf.TargetPort = s[1]
 					return nil
 				}
 				return fmt.Errorf("Invalid port")
@@ -121,8 +121,8 @@ func SetProxyAddr(s ...string) func(*SAMHTTPProxy) error {
 func SetAddrMixed(s string, i int) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if i < 65536 && i > 0 {
-			c.SamHost = s
-			c.SamPort = strconv.Itoa(i)
+			c.Conf.SamHost = s
+			c.Conf.SamPort = strconv.Itoa(i)
 			return nil
 		}
 		return fmt.Errorf("Invalid port")
@@ -132,7 +132,7 @@ func SetAddrMixed(s string, i int) func(*SAMHTTPProxy) error {
 //SetContrlHost sets the host of the client's Proxy controller
 func SetControlHost(s string) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		c.controlHost = s
+		c.Conf.ControlHost = s
 		return nil
 	}
 }
@@ -145,7 +145,7 @@ func SetControlPort(s string) func(*SAMHTTPProxy) error {
 			return fmt.Errorf("Invalid port; non-number")
 		}
 		if port < 65536 && port > -1 {
-			c.controlPort = s
+			c.Conf.ControlPort = s
 			return nil
 		}
 		return fmt.Errorf("Invalid port")
@@ -155,7 +155,7 @@ func SetControlPort(s string) func(*SAMHTTPProxy) error {
 //SetProxyHost sets the host of the client's Proxy controller
 func SetProxyHost(s string) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		c.proxyHost = s
+		c.Conf.TargetHost = s
 		return nil
 	}
 }
@@ -168,7 +168,7 @@ func SetProxyPort(s string) func(*SAMHTTPProxy) error {
 			return fmt.Errorf("Invalid port; non-number")
 		}
 		if port < 65536 && port > -1 {
-			c.proxyPort = s
+			c.Conf.TargetPort = s
 			return nil
 		}
 		return fmt.Errorf("Invalid port")
@@ -178,7 +178,7 @@ func SetProxyPort(s string) func(*SAMHTTPProxy) error {
 //SetKeysPath sets the path to the key save files
 func SetKeysPath(s string) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		c.keyspath = s
+		c.Conf.KeyFilePath = s
 		return nil
 	}
 }
@@ -186,7 +186,7 @@ func SetKeysPath(s string) func(*SAMHTTPProxy) error {
 //SetHost sets the host of the client's SAM bridge
 func SetHost(s string) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		c.SamHost = s
+		c.Conf.SamHost = s
 		return nil
 	}
 }
@@ -199,7 +199,7 @@ func SetPort(s string) func(*SAMHTTPProxy) error {
 			return fmt.Errorf("Invalid port; non-number")
 		}
 		if port < 65536 && port > -1 {
-			c.SamPort = s
+			c.Conf.SamPort = s
 			return nil
 		}
 		return fmt.Errorf("Invalid port")
@@ -210,7 +210,7 @@ func SetPort(s string) func(*SAMHTTPProxy) error {
 func SetPortInt(i int) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if i < 65536 && i > -1 {
-			c.SamPort = strconv.Itoa(i)
+			c.Conf.SamPort = strconv.Itoa(i)
 			return nil
 		}
 		return fmt.Errorf("Invalid port")
@@ -229,7 +229,7 @@ func SetDebug(b bool) func(*SAMHTTPProxy) error {
 func SetInLength(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if u < 7 {
-			c.inLength = u
+			c.Conf.InLength = int(u)
 			return nil
 		}
 		return fmt.Errorf("Invalid inbound tunnel length")
@@ -240,7 +240,7 @@ func SetInLength(u uint) func(*SAMHTTPProxy) error {
 func SetOutLength(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if u < 7 {
-			c.outLength = u
+			c.Conf.OutLength = int(u)
 			return nil
 		}
 		return fmt.Errorf("Invalid outbound tunnel length")
@@ -251,7 +251,7 @@ func SetOutLength(u uint) func(*SAMHTTPProxy) error {
 func SetInVariance(i int) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if i < 7 && i > -7 {
-			c.inVariance = i
+			c.Conf.InVariance = int(i)
 			return nil
 		}
 		return fmt.Errorf("Invalid inbound tunnel length")
@@ -262,7 +262,7 @@ func SetInVariance(i int) func(*SAMHTTPProxy) error {
 func SetOutVariance(i int) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if i < 7 && i > -7 {
-			c.outVariance = i
+			c.Conf.OutVariance = int(i)
 			return nil
 		}
 		return fmt.Errorf("Invalid outbound tunnel variance")
@@ -273,7 +273,7 @@ func SetOutVariance(i int) func(*SAMHTTPProxy) error {
 func SetInQuantity(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if u <= 16 {
-			c.inQuantity = u
+			c.Conf.InQuantity = int(u)
 			return nil
 		}
 		return fmt.Errorf("Invalid inbound tunnel quantity")
@@ -284,7 +284,7 @@ func SetInQuantity(u uint) func(*SAMHTTPProxy) error {
 func SetOutQuantity(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if u <= 16 {
-			c.outQuantity = u
+			c.Conf.OutQuantity = int(u)
 			return nil
 		}
 		return fmt.Errorf("Invalid outbound tunnel quantity")
@@ -295,7 +295,7 @@ func SetOutQuantity(u uint) func(*SAMHTTPProxy) error {
 func SetInBackups(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if u < 6 {
-			c.inBackups = u
+			c.Conf.InBackupQuantity = int(u)
 			return nil
 		}
 		return fmt.Errorf("Invalid inbound tunnel backup quantity")
@@ -306,7 +306,7 @@ func SetInBackups(u uint) func(*SAMHTTPProxy) error {
 func SetOutBackups(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if u < 6 {
-			c.outBackups = u
+			c.Conf.OutBackupQuantity = int(u)
 			return nil
 		}
 		return fmt.Errorf("Invalid outbound tunnel backup quantity")
@@ -316,7 +316,7 @@ func SetOutBackups(u uint) func(*SAMHTTPProxy) error {
 //SetUnpublished tells the router to not publish the client leaseset
 func SetUnpublished(b bool) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		c.dontPublishLease = b
+		c.Conf.Client = b
 		return nil
 	}
 }
@@ -324,7 +324,7 @@ func SetUnpublished(b bool) func(*SAMHTTPProxy) error {
 //SetEncrypt tells the router to use an encrypted leaseset
 func SetEncrypt(b bool) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		c.encryptLease = b
+		c.Conf.EncryptLeaseSet = b
 		return nil
 	}
 }
@@ -332,7 +332,7 @@ func SetEncrypt(b bool) func(*SAMHTTPProxy) error {
 //SetReduceIdle sets the created tunnels to be reduced during extended idle time to avoid excessive resource usage
 func SetReduceIdle(b bool) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		c.reduceIdle = b
+		c.Conf.ReduceIdle = b
 		return nil
 	}
 }
@@ -341,7 +341,7 @@ func SetReduceIdle(b bool) func(*SAMHTTPProxy) error {
 func SetReduceIdleTime(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if u > 299999 {
-			c.reduceIdleTime = u
+			c.Conf.ReduceIdleTime = int(u)
 			return nil
 		}
 		return fmt.Errorf("Invalid reduce idle time %v", u)
@@ -352,7 +352,7 @@ func SetReduceIdleTime(u uint) func(*SAMHTTPProxy) error {
 func SetReduceIdleQuantity(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		if u < 5 {
-			c.reduceIdleQuantity = u
+			c.Conf.ReduceIdleQuantity = int(u)
 			return nil
 		}
 		return fmt.Errorf("Invalid reduced tunnel quantity %v", u)
@@ -362,7 +362,7 @@ func SetReduceIdleQuantity(u uint) func(*SAMHTTPProxy) error {
 //SetCompression sets the tunnels to close after a specific amount of time
 func SetCompression(b bool) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		c.compression = b
+		c.Conf.UseCompression = b
 		return nil
 	}
 }
@@ -370,7 +370,7 @@ func SetCompression(b bool) func(*SAMHTTPProxy) error {
 //SetCloseIdle enables debugging messages
 func SetCloseIdle(b bool) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
-		c.closeIdle = b
+		c.Conf.CloseIdle = b
 		return nil
 	}
 }
@@ -380,7 +380,7 @@ func SetCloseIdleTime(u uint) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {
 		log.Println("TEST CLOSE", u, (u > 299999))
 		if u > 299999 {
-			c.closeIdleTime = u
+			c.Conf.CloseIdleTime = int(u)
 			return nil
 		}
 		return fmt.Errorf("Invalid close idle time %v", u)
@@ -389,87 +389,87 @@ func SetCloseIdleTime(u uint) func(*SAMHTTPProxy) error {
 
 //return the inbound length as a string.
 func (c *SAMHTTPProxy) inlength() string {
-	return fmt.Sprintf("inbound.length=%d", c.inLength)
+	return fmt.Sprintf("inbound.length=%d", c.Conf.InLength)
 }
 
 //return the outbound length as a string.
 func (c *SAMHTTPProxy) outlength() string {
-	return fmt.Sprintf("outbound.length=%d", c.outLength)
+	return fmt.Sprintf("outbound.length=%d", c.Conf.OutLength)
 }
 
 //return the inbound length variance as a string.
 func (c *SAMHTTPProxy) invariance() string {
-	return fmt.Sprintf("inbound.lengthVariance=%d", c.inVariance)
+	return fmt.Sprintf("inbound.lengthVariance=%d", c.Conf.InVariance)
 }
 
 //return the outbound length variance as a string.
 func (c *SAMHTTPProxy) outvariance() string {
-	return fmt.Sprintf("outbound.lengthVariance=%d", c.outVariance)
+	return fmt.Sprintf("outbound.lengthVariance=%d", c.Conf.OutVariance)
 }
 
 //return the inbound tunnel quantity as a string.
 func (c *SAMHTTPProxy) inquantity() string {
-	return fmt.Sprintf("inbound.quantity=%d", c.inQuantity)
+	return fmt.Sprintf("inbound.quantity=%d", c.Conf.InQuantity)
 }
 
 //return the outbound tunnel quantity as a string.
 func (c *SAMHTTPProxy) outquantity() string {
-	return fmt.Sprintf("outbound.quantity=%d", c.outQuantity)
+	return fmt.Sprintf("outbound.quantity=%d", c.Conf.OutQuantity)
 }
 
 //return the inbound tunnel quantity as a string.
 func (c *SAMHTTPProxy) inbackups() string {
-	return fmt.Sprintf("inbound.backupQuantity=%d", c.inQuantity)
+	return fmt.Sprintf("inbound.backupQuantity=%d", c.Conf.InQuantity)
 }
 
 //return the outbound tunnel quantity as a string.
 func (c *SAMHTTPProxy) outbackups() string {
-	return fmt.Sprintf("outbound.backupQuantity=%d", c.outQuantity)
+	return fmt.Sprintf("outbound.backupQuantity=%d", c.Conf.OutQuantity)
 }
 
 func (c *SAMHTTPProxy) encryptlease() string {
-	if c.encryptLease {
+	if c.Conf.EncryptLeaseSet {
 		return "i2cp.encryptLeaseSet=true"
 	}
 	return "i2cp.encryptLeaseSet=false"
 }
 
 func (c *SAMHTTPProxy) dontpublishlease() string {
-	if c.dontPublishLease {
+	if c.Conf.Client {
 		return "i2cp.dontPublishLeaseSet=true"
 	}
 	return "i2cp.dontPublishLeaseSet=false"
 }
 
 func (c *SAMHTTPProxy) reduceonidle() string {
-	if c.reduceIdle {
+	if c.Conf.ReduceIdle {
 		return "i2cp.reduceOnIdle=true"
 	}
 	return "i2cp.reduceOnIdle=false"
 }
 
 func (c *SAMHTTPProxy) reduceidletime() string {
-	return fmt.Sprintf("i2cp.reduceIdleTime=%d", c.reduceIdleTime)
+	return fmt.Sprintf("i2cp.reduceIdleTime=%d", c.Conf.ReduceIdleTime)
 }
 
 func (c *SAMHTTPProxy) reduceidlecount() string {
-	return fmt.Sprintf("i2cp.reduceIdleQuantity=%d", c.reduceIdleQuantity)
+	return fmt.Sprintf("i2cp.reduceIdleQuantity=%d", c.Conf.ReduceIdleQuantity)
 }
 
 func (c *SAMHTTPProxy) usecompresion() string {
-	if c.compression {
+	if c.Conf.UseCompression {
 		return "i2cp.gzip=true"
 	}
 	return "i2cp.gzip=false"
 }
 
 func (c *SAMHTTPProxy) closeonidle() string {
-	if c.reduceIdle {
+	if c.Conf.ReduceIdle {
 		return "i2cp.closeOnIdle=true"
 	}
 	return "i2cp.closeOnIdle=false"
 }
 
 func (c *SAMHTTPProxy) closeidletime() string {
-	return fmt.Sprintf("i2cp.closeIdleTime=%d", c.reduceIdleTime)
+	return fmt.Sprintf("i2cp.closeIdleTime=%d", c.Conf.ReduceIdleTime)
 }

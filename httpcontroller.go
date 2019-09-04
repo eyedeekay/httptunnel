@@ -85,21 +85,21 @@ func unixRestart() error {
 func (s *SAMHTTPController) windowsStart() error {
 	var err error
 	s.ProxyServer.Handler, err = NewHttpProxy(
-		SetHost(s.ProxyServer.Handler.(*SAMHTTPProxy).SamHost),
-		SetPort(s.ProxyServer.Handler.(*SAMHTTPProxy).SamPort),
+		SetHost(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.SamHost),
+		SetPort(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.SamPort),
 		SetDebug(s.ProxyServer.Handler.(*SAMHTTPProxy).debug),
-		SetInLength(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).inLength)),
-		SetOutLength(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).outLength)),
-		SetInQuantity(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).inQuantity)),
-		SetOutQuantity(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).outQuantity)),
-		SetInBackups(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).inBackups)),
-		SetOutBackups(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).outBackups)),
-		SetInVariance(s.ProxyServer.Handler.(*SAMHTTPProxy).inVariance),
-		SetOutVariance(s.ProxyServer.Handler.(*SAMHTTPProxy).outVariance),
-		SetUnpublished(s.ProxyServer.Handler.(*SAMHTTPProxy).dontPublishLease),
-		SetReduceIdle(s.ProxyServer.Handler.(*SAMHTTPProxy).reduceIdle),
-		SetReduceIdleTime(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).reduceIdleTime)),
-		SetReduceIdleQuantity(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).reduceIdleQuantity)),
+		SetInLength(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.InLength)),
+		SetOutLength(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.OutLength)),
+		SetInQuantity(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.InQuantity)),
+		SetOutQuantity(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.OutQuantity)),
+		SetInBackups(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.InBackupQuantity)),
+		SetOutBackups(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.OutBackupQuantity)),
+		SetInVariance(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.InVariance),
+		SetOutVariance(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.OutVariance),
+		SetUnpublished(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.Client),
+		SetReduceIdle(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.ReduceIdle),
+		SetReduceIdleTime(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.ReduceIdleTime)),
+		SetReduceIdleQuantity(uint(s.ProxyServer.Handler.(*SAMHTTPProxy).Conf.ReduceIdleQuantity)),
 	)
 	if err != nil {
 		log.Fatal(err)
