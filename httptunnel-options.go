@@ -160,6 +160,26 @@ func SetProxyHost(s string) func(*SAMHTTPProxy) error {
 	}
 }
 
+//SetOutProxy sets the host of the client's outproxy, it may be a base32 or a local proxy
+func SetOutProxy(s string) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		c.UseOutProxy = s
+		return nil
+	}
+}
+
+//SetOutProxySocks tells it to use a SOCKS outproxy instead of HTTP
+func SetOutProxySocks(s bool) func(*SAMHTTPProxy) error {
+	return func(c *SAMHTTPProxy) error {
+		if s {
+			c.outproxytype = "socks://"
+			return nil
+		}
+		c.outproxytype = "http://"
+		return nil
+	}
+}
+
 //SetProxyPort sets the host of the client's Proxy controller
 func SetProxyPort(s string) func(*SAMHTTPProxy) error {
 	return func(c *SAMHTTPProxy) error {

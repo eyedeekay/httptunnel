@@ -3,12 +3,14 @@ package i2phttpproxy
 import (
 	"crypto/tls"
 	"fmt"
+	"golang.org/x/net/proxy"
 	"golang.org/x/time/rate"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -23,17 +25,24 @@ import (
 	"github.com/eyedeekay/sam-forwarder/hashhash"
 	"github.com/eyedeekay/sam-forwarder/i2pkeys"
 	"github.com/eyedeekay/sam-forwarder/interface"
+	"github.com/eyedeekay/sam-forwarder/tcp"
 	"github.com/eyedeekay/sam3/i2pkeys"
+	"github.com/mwitkow/go-http-dialer"
+	"github.com/phayes/freeport"
 )
 
 type SAMHTTPProxy struct {
-	goSam       *goSam.Client
-	Hasher      *hashhash.Hasher
-	client      *http.Client
-	transport   *http.Transport
-	rateLimiter *rate.Limiter
+	goSam          *goSam.Client
+	Hasher         *hashhash.Hasher
+	client         *http.Client
+	outproxyclient *http.Client
+	transport      *http.Transport
+	rateLimiter    *rate.Limiter
+	outproxy       *samforwarder.SAMClientForwarder
+	outproxydialer proxy.Dialer
+	outproxytype   string
 
-	useOutProxy bool
+	UseOutProxy string
 
 	dialed bool
 	debug  bool
@@ -190,20 +199,21 @@ func (p *SAMHTTPProxy) samaddr() string {
 func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 	plog(req.RemoteAddr, " ", req.Method, " ", req.URL)
 	p.Save()
-	if req.URL.Scheme != "http" && req.URL.Scheme != "https" {
+	/*if req.URL.Scheme != "http" && req.URL.Scheme != "https" {
 		if !(req.Method == http.MethodConnect) {
 			msg := "Unsupported protocol scheme " + req.URL.Scheme
 			http.Error(wr, msg, http.StatusBadRequest)
 			plog(msg)
 			return
 		}
+	}*/
+
+	if req.URL.Host == p.Conf.ControlHost+":"+p.Conf.ControlPort {
+		p.reset(wr, req)
+		return
 	}
 
-	if !strings.HasSuffix(req.URL.Host, ".i2p") {
-		if req.URL.Host == p.Conf.ControlHost+":"+p.Conf.ControlPort {
-			p.reset(wr, req)
-			return
-		}
+	if !strings.HasSuffix(req.URL.Host, ".i2p") && p.UseOutProxy == "" {
 		msg := "Unsupported host " + req.URL.Host
 		if !Quiet {
 			http.Error(wr, msg, http.StatusBadRequest)
@@ -216,6 +226,13 @@ func (p *SAMHTTPProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 		p.get(wr, req)
 		return
 	} else {
+		if !strings.HasSuffix(req.URL.Host, ".i2p") && p.UseOutProxy != "" {
+			p.outproxyget(wr, req)
+			return
+		} else {
+			plog("No outproxy configured ", p.UseOutProxy, p.outproxy.Target())
+			return
+		}
 		p.connect(wr, req)
 		return
 	}
@@ -265,10 +282,35 @@ func (p *SAMHTTPProxy) reset(wr http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func (p *SAMHTTPProxy) outproxyget(wr http.ResponseWriter, req *http.Request) {
+	plog("CONNECT via outproxy to", req.URL.Host)
+	dest_conn, err := p.outproxydialer.Dial("tcp", req.URL.String())
+	if err != nil {
+		if !Quiet {
+			plog(err.Error())
+		}
+		return
+	}
+	hijacker, ok := wr.(http.Hijacker)
+	if !ok {
+		return
+	}
+	client_conn, _, err := hijacker.Hijack()
+	if err != nil {
+		if !Quiet {
+			plog(err.Error())
+		}
+		return
+	}
+	go proxycommon.Transfer(dest_conn, client_conn)
+	go proxycommon.Transfer(client_conn, dest_conn)
+}
+
 func (p *SAMHTTPProxy) get(wr http.ResponseWriter, req *http.Request) {
 	req.RequestURI = ""
 	proxycommon.DelHopHeaders(req.Header)
-	p.client = p.freshClient()
+	plog("Getting i2p page")
+	//p.client = p.freshClient()
 	resp, err := p.client.Do(req)
 	if err != nil {
 		msg := "Proxy Error " + err.Error()
@@ -333,6 +375,13 @@ func (p *SAMHTTPProxy) Save() string {
 	return ""
 }
 
+func (p *SAMHTTPProxy) GuaranteePrefix(str string) string {
+	if strings.HasPrefix(p.outproxytype, str) {
+		return str
+	}
+	return p.outproxytype + str
+}
+
 func (handler *SAMHTTPProxy) Load() (samtunnel.SAMTunnel, error) {
 	var err error
 	handler.Conf.ClientDest = handler.Save()
@@ -360,6 +409,128 @@ func (handler *SAMHTTPProxy) Load() (samtunnel.SAMTunnel, error) {
 	}
 	handler.transport = handler.freshTransport()
 	handler.client = handler.freshClient()
+	if handler.UseOutProxy != "" {
+		if strings.HasSuffix(handler.UseOutProxy, ".i2p") {
+			plog("Configuring an outproxy,", handler.UseOutProxy)
+			config := handler.Conf
+			port, err := freeport.GetFreePort()
+			if err != nil {
+				return nil, err
+			}
+			config.TargetPort = strconv.Itoa(port)
+			config.TunName = handler.Conf.TunName + "-outproxy"
+			config.ClientDest = handler.UseOutProxy
+			handler.outproxy, err = samforwarder.NewSAMClientForwarderFromOptions(
+				samforwarder.SetClientSaveFile(config.SaveFile),
+				samforwarder.SetClientFilePath(config.SaveDirectory),
+				samforwarder.SetClientHost(config.TargetHost),
+				samforwarder.SetClientPort(config.TargetPort),
+				samforwarder.SetClientSAMHost(config.SamHost),
+				samforwarder.SetClientSAMPort(config.SamPort),
+				samforwarder.SetClientSigType(config.SigType),
+				samforwarder.SetClientName(config.TunName),
+				samforwarder.SetClientInLength(config.InLength),
+				samforwarder.SetClientOutLength(config.OutLength),
+				samforwarder.SetClientInVariance(config.InVariance),
+				samforwarder.SetClientOutVariance(config.OutVariance),
+				samforwarder.SetClientInQuantity(config.InQuantity),
+				samforwarder.SetClientOutQuantity(config.OutQuantity),
+				samforwarder.SetClientInBackups(config.InBackupQuantity),
+				samforwarder.SetClientOutBackups(config.OutBackupQuantity),
+				samforwarder.SetClientEncrypt(config.EncryptLeaseSet),
+				samforwarder.SetClientLeaseSetKey(config.LeaseSetKey),
+				samforwarder.SetClientLeaseSetPrivateKey(config.LeaseSetPrivateKey),
+				samforwarder.SetClientLeaseSetPrivateSigningKey(config.LeaseSetPrivateSigningKey),
+				samforwarder.SetClientAllowZeroIn(config.InAllowZeroHop),
+				samforwarder.SetClientAllowZeroOut(config.OutAllowZeroHop),
+				samforwarder.SetClientFastRecieve(config.FastRecieve),
+				samforwarder.SetClientCompress(config.UseCompression),
+				samforwarder.SetClientReduceIdle(config.ReduceIdle),
+				samforwarder.SetClientReduceIdleTimeMs(config.ReduceIdleTime),
+				samforwarder.SetClientReduceIdleQuantity(config.ReduceIdleQuantity),
+				samforwarder.SetClientCloseIdle(config.CloseIdle),
+				samforwarder.SetClientCloseIdleTimeMs(config.CloseIdleTime),
+				samforwarder.SetClientAccessListType(config.AccessListType),
+				samforwarder.SetClientAccessList(config.AccessList),
+				samforwarder.SetClientMessageReliability(config.MessageReliability),
+				samforwarder.SetClientPassword(config.KeyFilePath),
+				samforwarder.SetClientDestination(config.ClientDest),
+			)
+			if err != nil {
+				return nil, err
+			}
+			go handler.outproxy.Serve()
+			if handler.outproxytype == "http://" {
+				proxyURL, err := url.Parse(handler.GuaranteePrefix(handler.outproxy.Target()))
+				if err != nil {
+					return nil, err
+				}
+				handler.outproxydialer = http_dialer.New(proxyURL, http_dialer.WithTls(&tls.Config{}))
+				if err != nil {
+					return nil, err
+				}
+				handler.outproxyclient = &http.Client{
+					Transport: &http.Transport{
+						Dial:            handler.outproxydialer.Dial,
+						TLSNextProto:    make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+						TLSClientConfig: &tls.Config{},
+					},
+					Timeout:       time.Second * 300,
+					CheckRedirect: nil,
+				}
+			} else {
+				handler.outproxydialer, err = proxy.SOCKS5("tcp", handler.outproxy.Target(), nil, nil)
+				if err != nil {
+					return nil, err
+				}
+				handler.outproxyclient = &http.Client{
+					Transport: &http.Transport{
+						Dial:            handler.outproxydialer.Dial,
+						TLSNextProto:    make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+						TLSClientConfig: &tls.Config{},
+					},
+					Timeout:       time.Second * 300,
+					CheckRedirect: nil,
+				}
+			}
+			plog("setup outproxy on", handler.outproxy.Target())
+		} else {
+			if handler.outproxytype == "http://" {
+				proxyURL, err := url.Parse(handler.GuaranteePrefix(handler.UseOutProxy))
+				if err != nil {
+					return nil, err
+				}
+				handler.outproxydialer = http_dialer.New(proxyURL, http_dialer.WithTls(&tls.Config{}))
+				if err != nil {
+					return nil, err
+				}
+				handler.outproxyclient = &http.Client{
+					Transport: &http.Transport{
+						Dial:            handler.outproxydialer.Dial,
+						TLSNextProto:    make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+						TLSClientConfig: &tls.Config{},
+					},
+					Timeout:       time.Second * 300,
+					CheckRedirect: nil,
+				}
+			} else {
+				handler.outproxydialer, err = proxy.SOCKS5("tcp", handler.UseOutProxy, nil, proxy.Direct)
+				if err != nil {
+					return nil, err
+				}
+				handler.outproxyclient = &http.Client{
+					Transport: &http.Transport{
+						Dial:            handler.outproxydialer.Dial,
+						TLSNextProto:    make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+						TLSClientConfig: &tls.Config{},
+					},
+					Timeout:       time.Second * 300,
+					CheckRedirect: nil,
+				}
+			}
+			plog("setup outproxy on", handler.GuaranteePrefix(handler.UseOutProxy))
+		}
+	}
 	handler.Hasher, err = hashhash.NewHasher(len(strings.Replace(handler.Base32(), ".b32.i2p", "", 1)))
 	if err != nil {
 		return nil, err
@@ -375,6 +546,8 @@ func NewHttpProxy(opts ...func(*SAMHTTPProxy) error) (*SAMHTTPProxy, error) {
 	handler.Conf.SamPort = "7656"
 	handler.Conf.ControlHost = "127.0.0.1"
 	handler.Conf.ControlPort = "7951"
+	handler.UseOutProxy = ""
+	handler.outproxytype = "http://"
 	for _, o := range opts {
 		if err := o(&handler); err != nil {
 			return nil, err

@@ -28,3 +28,16 @@ It also has an aggressive mode, which creates a whole new tunnel pool for every
 single eepSite you visit, by domain(which means that if you visit both the
 base32 and readable domain, it will create *two* destinations). I advise against
 using it.
+
+Features: Done
+--------------
+
+  * Self-supervising, Self-restarting on Unixes
+  * CONNECT support
+  * "New Ident" signaling interface
+
+Features: Planned
+-----------------
+
+  * Outproxy Support
+  * Traffic Shaping

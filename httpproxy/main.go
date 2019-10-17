@@ -24,7 +24,7 @@ var (
 	samPortString        = flag.String("bridge-port", "7656", ":port of the SAM bridge")
 	watchProfiles        = flag.String("watch-profiles", "~/.mozilla/.firefox.profile.i2p.default/user.js,~/.mozilla/.firefox.profile.i2p.debug/user.js", "Monitor and control these Firefox profiles")
 	destfile             = flag.String("dest-file", "invalid.tunkey", "Use a long-term destination key")
-	debugConnection      = flag.Bool("conn-debug", true, "Print connection debug info")
+	debugConnection      = flag.Bool("conn-debug", false, "Print connection debug info")
 	inboundTunnelLength  = flag.Int("in-tun-length", 2, "Tunnel Length(default 3)")
 	outboundTunnelLength = flag.Int("out-tun-length", 2, "Tunnel Length(default 3)")
 	inboundTunnels       = flag.Int("in-tunnels", 2, "Inbound Tunnel Count(default 2)")
@@ -43,8 +43,10 @@ var (
 	reduceIdleQuantity   = flag.Int("reduce-idle-tunnels", 1, "Reduce tunnels to this level")
 	runCommand           = flag.String("run-command", "", "Execute command using the *_PROXY environment variables")
 	runArguments         = flag.String("run-arguments", "", "Pass arguments to run-command")
-	suppressLifetime     = flag.Bool("suppress-lifetime-output", false, "Suppress \"Tunnel lifetime\" output")
+	suppressLifetime     = flag.Bool("suppress-lifetime-output", true, "Suppress \"Tunnel lifetime\" output")
 	runQuiet             = flag.Bool("run-quiet", false, "Suppress all non-command output")
+	outproxy             = flag.String("outproxy-addr", "false.i2p", "Use this address as an outproxy, either a base32 address or a local HTTP proxy")
+	socks                = flag.Bool("outproxy-socks", true, "Use a SOCKS outproxy")
 )
 
 var addr string
@@ -86,6 +88,8 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 		SetPort(*samPortString),
 		SetProxyAddr(ln.Addr().String()),
 		SetControlAddr(cln.Addr().String()),
+		SetOutProxy(*outproxy),
+		SetOutProxySocks(*socks),
 		SetDebug(*debugConnection),
 		SetInLength(uint(*inboundTunnelLength)),
 		SetOutLength(uint(*outboundTunnelLength)),

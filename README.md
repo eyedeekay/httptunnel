@@ -45,10 +45,9 @@ Features: Done
   * CONNECT support
   * "New Ident" signaling interface(Unix-only for now)(I guess I might have done
   for Windows too now but I haven't tried it out yet).
+  * Outproxy Support
 
 Features: Planned
 -----------------
 
-  * Outproxy Support
   * Traffic Shaping
-  * Authentication
