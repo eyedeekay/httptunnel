@@ -167,8 +167,8 @@ func proxyMain(ctx context.Context, ln net.Listener, cln net.Listener) {
 	os.Setenv("FTP_PROXY", "http://"+ln.Addr().String())
 	os.Setenv("ALL_PROXY", "http://"+ln.Addr().String())
 
-    log.Println("Waiting a few seconds for the proxy to start")
-    time.Sleep(time.Duration(10 * time.Second))
+	log.Println("Waiting a few seconds for the proxy to start")
+	time.Sleep(time.Duration(10 * time.Second))
 
 	//log.Println("Launching ", *runCommand, "with proxy http://"+ln.Addr().String())
 	url := flag.Arg(0)
