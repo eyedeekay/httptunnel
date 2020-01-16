@@ -374,6 +374,7 @@ func (p *SAMMultiProxy) Save() string {
 
 func (handler *SAMMultiProxy) Load() (samtunnel.SAMTunnel, error) {
 	var err error
+	handler.clients = make(map[string]*samClient)
 	handler.Conf.ClientDest = handler.Save()
 	handler.clients["general"] = &samClient{}
 	handler.clients["general"].goSam, err = goSam.NewClientFromOptions(
@@ -411,7 +412,6 @@ func NewHttpProxy(opts ...func(*SAMMultiProxy) error) (*SAMMultiProxy, error) {
 	handler.Conf = &i2ptunconf.Conf{}
 	handler.Conf.SamHost = "127.0.0.1"
 	handler.Conf.SamPort = "7656"
-	handler.clients = make(map[string]*samClient)
 	handler.recent = "general"
 	handler.aggressive = false
 	for _, o := range opts {
