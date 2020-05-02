@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -261,6 +262,11 @@ func (p *SAMMultiProxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	if strings.HasSuffix(req.URL.Host, ".rc") {
+		p.serveLoopBacks(wr, req)
+		return
+	}
+
 	if !strings.HasSuffix(req.URL.Host, ".i2p") {
 		if req.URL.Host == p.Conf.ControlHost+":"+p.Conf.ControlPort {
 			p.reset(wr, req)
@@ -297,6 +303,79 @@ func (p *SAMMultiProxy) reset(wr http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
+}
+
+func (p *SAMMultiProxy) fixURL(URL, PATH string) string {
+	spliturl := strings.Split(URL, "/")
+	splitpath := strings.Split(PATH, "/")
+	if len(splitpath) < 1 {
+		return URL
+	}
+	switch splitpath[1] {
+	case "js":
+		plog("http://127.0.0.1:7657" + PATH)
+		return "http://127.0.0.1:7657" + PATH
+	case "themes":
+		plog("http://127.0.0.1:7657" + PATH)
+		return "http://127.0.0.1:7657" + PATH
+	}
+	return URL + strings.Replace(spliturl[len(spliturl)-1], PATH, "", 1)
+}
+
+func (p *SAMMultiProxy) serveLoopBacks(wr http.ResponseWriter, req *http.Request) {
+	switch req.URL.Host {
+	case "bt.rc":
+		p.loopGet(wr, req, "http://127.0.0.1:7657/i2psnark/")
+	case "torrent.rc":
+		p.loopGet(wr, req, "http://127.0.0.1:7657/i2psnark/")
+	case "bittorrent.rc":
+		p.loopGet(wr, req, "http://127.0.0.1:7657/i2psnark/")
+	case "mail.rc":
+		p.loopGet(wr, req, "http://127.0.0.1:7657/webmail")
+	case "webmail.rc":
+		p.loopGet(wr, req, "http://127.0.0.1:7657/webmail")
+	case "tunnels.rc":
+		p.loopGet(wr, req, "http://127.0.0.1:7657/i2ptunnel/")
+	case "tun.rc":
+		p.loopGet(wr, req, "http://127.0.0.1:7657/i2ptunnel/")
+	case "netcat.rc":
+		p.loopGet(wr, req, "http://127.0.0.1:7657/i2ptunnel/")
+	case "socat.rc":
+		p.loopGet(wr, req, "http://127.0.0.1:7657/i2ptunnel/")
+	}
+}
+
+func (p *SAMMultiProxy) loopGet(wr http.ResponseWriter, req *http.Request, URL string) {
+	var err error
+	req.URL, err = url.Parse(p.fixURL(URL, req.URL.Path))
+	if err != nil {
+		plog("Loopback URL error", err.Error())
+		return
+	} else {
+		plog("Fetching loopback URL", req.URL.Host+req.URL.Path)
+	}
+	req.RemoteAddr = req.URL.Host + req.URL.Path
+	req.Host = req.URL.Host
+	req.RequestURI = ""
+	client := &http.Client{
+		Transport: &http.Transport{
+			DisableCompression: true,
+		},
+	}
+	proxycommon.DelHopHeaders(req.Header)
+	resp, err := client.Do(req)
+	if err != nil {
+		msg := "Proxy Error " + err.Error()
+		if !Quiet {
+			http.Error(wr, msg, http.StatusBadRequest)
+		}
+		plog(msg)
+		return
+	}
+	defer resp.Body.Close()
+	proxycommon.CopyHeader(wr.Header(), resp.Header)
+	wr.WriteHeader(resp.StatusCode)
+	io.Copy(wr, resp.Body)
 }
 
 func (p *SAMMultiProxy) get(wr http.ResponseWriter, req *http.Request) {
