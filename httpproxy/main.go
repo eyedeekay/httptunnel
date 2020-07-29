@@ -16,6 +16,7 @@ import (
 import (
 	"crawshaw.io/littleboss"
 	. "github.com/eyedeekay/httptunnel"
+	"github.com/eyedeekay/zerobundle"
 )
 
 var (
@@ -52,6 +53,9 @@ var (
 var addr string
 
 func main() {
+	if err := zerobundle.ZeroMain(); err != nil {
+		log.Println(err)
+	}
 	lb := littleboss.New(*tunnelName)
 	proxyaddr := "127.0.0.1:7950"
 	controladdr := "127.0.0.1:7951"
