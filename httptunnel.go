@@ -8,6 +8,8 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -188,7 +190,7 @@ func (p *SAMHTTPProxy) freshClient() *http.Client {
 }
 
 func (p *SAMHTTPProxy) freshSAMClient() (*goSam.Client, error) {
-	return p.goSam.NewClient()
+	return p.goSam.NewClient(rand.Int31n(math.MaxInt32))
 }
 
 //return the combined host:port of the SAM bridge

@@ -12,7 +12,7 @@ import (
 
 // tutorial line 48
 import (
-	"github.com/eyedeekay/gosam"
+	"github.com/eyedeekay/goSam"
 )
 
 func copyHeader(dst, src http.Header) {
