@@ -93,7 +93,7 @@ func (f *SAMMultiProxy) ID() string {
 
 func (p *SAMMultiProxy) Keys() i2pkeys.I2PKeys {
 	//k, _ := samkeys.DestToKeys(
-	k := p.findClient(p.recent).goSam.Destination()
+	k := p.findClient(p.recent).goSam.PrivateAddr()
 	//)
 	return k
 }
