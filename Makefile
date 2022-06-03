@@ -5,7 +5,7 @@ GO_COMPILER_OPTS = -a -tags netgo -ldflags '-w -extldflags "-static"'
 
 USER_GH=eyedeekay
 packagename=httptunnel
-VERSION=0.32.06
+VERSION=0.32.1
 
 httpall: fmt win lin linarm mac
 
