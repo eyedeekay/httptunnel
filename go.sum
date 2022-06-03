@@ -31,12 +31,6 @@ github.com/eyedeekay/go-i2cp v0.0.0-20190716135428-6d41bed718b0/go.mod h1:+P0fIh
 github.com/eyedeekay/go-i2pcontrol v0.0.0-20200110011336-510cca77e350/go.mod h1:bhIQsVpbNNXMtcoZ9UF4hLQleOjaCgKGXiRRhNc8TOA=
 github.com/eyedeekay/goSam v0.1.1-0.20190814204230-d4c9b8c57dd6/go.mod h1:kGTfZrncJ4CwMX3d1qA6bcMJTOcuTbOqgWg7WrFNAQ0=
 github.com/eyedeekay/goSam v0.32.31-0.20210122211817-f97683379f23/go.mod h1:UgJnih/LpotwKriwVPOEa6yPDM2NDdVrKfLtS5DOLPE=
-github.com/eyedeekay/goSam v0.32.31-0.20210415231611-c6d9c0e340b8 h1:w8gZ6aGy4H3pwRI7seUvUrVPhzrrEid2X8G2DcH7Yvk=
-github.com/eyedeekay/goSam v0.32.31-0.20210415231611-c6d9c0e340b8/go.mod h1:UgJnih/LpotwKriwVPOEa6yPDM2NDdVrKfLtS5DOLPE=
-github.com/eyedeekay/goSam v0.32.53 h1:oUivI6MOOQMtdXlXxauGUgGy/ueNr3hdtkTwQhHQ83c=
-github.com/eyedeekay/goSam v0.32.53/go.mod h1:UgJnih/LpotwKriwVPOEa6yPDM2NDdVrKfLtS5DOLPE=
-github.com/eyedeekay/goSam v0.32.54-0.20220428163540-6eca8863f71c h1:13pxVx9t06BQeOl0lUbodN7xPVWD2mCgjen8hnLM+9g=
-github.com/eyedeekay/goSam v0.32.54-0.20220428163540-6eca8863f71c/go.mod h1:R+prG/Xans0bG87LhtbbLSx40YiHtJNovhTHL2mEwPE=
 github.com/eyedeekay/goSam v0.32.54-0.20220603035649-cfdb60d9327b h1:nOF7hsTT0+Ywh3hwDihpVu9xGgobw2ymzT8HmkV0eH8=
 github.com/eyedeekay/goSam v0.32.54-0.20220603035649-cfdb60d9327b/go.mod h1:R+prG/Xans0bG87LhtbbLSx40YiHtJNovhTHL2mEwPE=
 github.com/eyedeekay/httptunnel v0.0.0-20190831065052-9eab288b8a82/go.mod h1:VeXBZz04xj4eUGAcD8ygn2WFxY/dAvRbSNYMWoDzMxc=
@@ -51,15 +45,12 @@ github.com/eyedeekay/ramp v0.0.0-20190429201811-305b382042ab/go.mod h1:h7mvUAMgZ
 github.com/eyedeekay/sam-forwarder v0.0.0-20190814201550-7c0d7cb0d56c/go.mod h1:Ptrm1d4a3KC5/cN264Gn6OntYOmcuJ8Pkyd7+hA01gw=
 github.com/eyedeekay/sam-forwarder v0.0.0-20190831071254-d67c0c0e311f/go.mod h1:u4K8aGwSIuMSQ/OzsH7zkshnEvCQgUupfexLXZIjsDI=
 github.com/eyedeekay/sam-forwarder v0.0.0-20190905212604-029317222e15/go.mod h1:kFP6jkqHUTGGW/nMUZLnRonkPWE9fyEc8/eSU1CqTFg=
-github.com/eyedeekay/sam-forwarder v0.0.0-20190908210105-71ca8cd65fda h1:Mpi42j17o2vXGZNmTAkv5pwXzVFKWkkAviSAjSF4xPs=
-github.com/eyedeekay/sam-forwarder v0.0.0-20190908210105-71ca8cd65fda/go.mod h1:crhQdi30uVnJ5Xn3JAPoMxvyWg6yo5LOfH4JZ+VIaxA=
 github.com/eyedeekay/sam-forwarder v0.32.2-0.20220603033253-9c0b2adb95b5 h1:fuu91F/M05YUz72HIFcYvCrJK5pbyujI1S6NNUMRNmY=
 github.com/eyedeekay/sam-forwarder v0.32.2-0.20220603033253-9c0b2adb95b5/go.mod h1:WNDqiMmkqf8iqeX4wFKdORRXdV90bOcbRhlVsepTLV0=
 github.com/eyedeekay/sam3 v0.0.0-20190613034117-99ad6522ebe3/go.mod h1:Vrxh+71E3HVYqyRlT5Jg+E26sSuu8UNTLB4p8qyT408=
 github.com/eyedeekay/sam3 v0.0.0-20190730185140-f8d54526ea25/go.mod h1:Y3igFVzN4ybqkkpfUWULGhw7WRp8lieq0ORXbLBbcZM=
 github.com/eyedeekay/sam3 v0.32.1/go.mod h1:Y3igFVzN4ybqkkpfUWULGhw7WRp8lieq0ORXbLBbcZM=
 github.com/eyedeekay/sam3 v0.32.2/go.mod h1:Y3igFVzN4ybqkkpfUWULGhw7WRp8lieq0ORXbLBbcZM=
-github.com/eyedeekay/sam3 v0.32.32 h1:9Ea1Ere5O8Clx8zYxKnvhrWy7R96Q4FvxlPskYf8VW0=
 github.com/eyedeekay/sam3 v0.32.32/go.mod h1:qRA9KIIVxbrHlkj+ZB+OoxFGFgdKeGp1vSgPw26eOVU=
 github.com/eyedeekay/sam3 v0.33.2 h1:WP+fD4oPxiE0cA+gTKRNiZo3SrGI2+5FkzrnU/6Mmz4=
 github.com/eyedeekay/sam3 v0.33.2/go.mod h1:sPtlI4cRm7wD0UywOzLPvvdY1G++vBSK3n+jiIGqWlU=
@@ -462,7 +453,6 @@ gitlab.com/golang-commonmark/puny v0.0.0-20180912090636-2cd490539afe/go.mod h1:P
 gitlab.com/opennota/wd v0.0.0-20191124020556-236695b0ea63/go.mod h1:n0SNS6rmmsb705EuaYk2RDZyy+pcmwEAuwQkTOOjsu8=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
-golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 h1:Gv7RPwsi3eZ2Fgewe3CBsuOebPwO27PoXzRpJPsvSSM=
 golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 h1:psW17arqaxU48Z5kZ0CQnkZWQJsqcURM6tKiBApRjXI=
@@ -478,7 +468,6 @@ golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn
 golang.org/x/net v0.0.0-20190603091049-60506f45cf65/go.mod h1:HSz+uSET+XFnRR8LxR5pz3Of3rY3CfYBVs4xY44aLks=
 golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
-golang.org/x/net v0.0.0-20200222125558-5a598a2470a0 h1:MsuvTghUPjX762sGLnGsxC3HM0B5r83wEtYcYR8/vRs=
 golang.org/x/net v0.0.0-20200222125558-5a598a2470a0/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20200226121028-0de0cce0169b/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20201021035429-f5854403a974 h1:IX6qOQeG5uLjB/hjjwjedwfjND0hgjPMMyO1RoIXQNI=
@@ -492,8 +481,8 @@ golang.org/x/sys v0.0.0-20181128092732-4ed8d59d0b35/go.mod h1:STP8DvDyc/dI5b8T5h
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20190830142957-1e83adbbebd0 h1:7z820YPX9pxWR59qM7BE5+fglp4D/mKqAwCvGt11b+8=
 golang.org/x/sys v0.0.0-20190830142957-1e83adbbebd0/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f h1:+Nyd8tzPX9R7BWHguqsrbFdRx3WQ/1ib8I44HXV5yTA=
 golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=
@@ -508,8 +497,8 @@ golang.org/x/tools v0.0.0-20200410194907-79a7a3126eef/go.mod h1:EkVYQZoAsY45+roY
 golang.org/x/tools v0.0.0-20201125231158-b5590deeca9b/go.mod h1:emZCQorbCU4vsT4fOWvOPXz4eW1wZW4PmDk9uLelYpA=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
-golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
+golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 h1:go1bK/D/BFZV2I8cIQd1NKEZ+0owSTG1fDTci4IqFcE=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 google.golang.org/api v0.0.0-20170921000349-586095a6e407/go.mod h1:4mhQ8q/RsB7i+udVvVy5NUi08OU8ZlA0gRVgrF7VFY0=
 google.golang.org/appengine v1.6.5/go.mod h1:8WjMMxjGQR8xUklV/ARdw2HLXBOI7O7uCIDZVag1xfc=
