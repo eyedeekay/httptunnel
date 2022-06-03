@@ -11,13 +11,13 @@ import (
 	"os/signal"
 	"strings"
 	"time"
+
+	"crawshaw.io/littleboss"
+
+	. "github.com/eyedeekay/httptunnel"
 )
 
-import (
-	"crawshaw.io/littleboss"
-	. "github.com/eyedeekay/httptunnel"
-	"github.com/eyedeekay/zerobundle"
-)
+//	"github.com/eyedeekay/zerobundle"
 
 var (
 	tunnelName           = flag.String("service-name", "sam-http-proxy", "Name of the service(can be anything)")
@@ -53,9 +53,9 @@ var (
 var addr string
 
 func main() {
-	if err := zerobundle.ZeroMain(); err != nil {
-		log.Println(err)
-	}
+	//if err := zerobundle.ZeroMain(); err != nil {
+	//	log.Println(err)
+	//}
 	lb := littleboss.New(*tunnelName)
 	proxyaddr := "127.0.0.1:7950"
 	controladdr := "127.0.0.1:7951"

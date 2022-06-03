@@ -9,9 +9,9 @@ require (
 	github.com/eyedeekay/i2pkeys v0.0.0-20220310055120-b97558c06ac8
 	github.com/eyedeekay/sam-forwarder v0.32.2-0.20220603033253-9c0b2adb95b5
 	github.com/eyedeekay/sam3 v0.33.2 // indirect
-	github.com/eyedeekay/zerobundle v0.0.0-20210508181003-86893b4491fd
 	github.com/go-gl/gl v0.0.0-20210501111010-69f74958bac0 // indirect
 	github.com/go-gl/glfw v0.0.0-20210410170116-ea3d685f79fb // indirect
+	github.com/kr/pretty v0.2.1 // indirect
 	github.com/mwitkow/go-http-dialer v0.0.0-20161116154839-378f744fb2b8
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -19,4 +19,5 @@ require (
 	github.com/tfriedel6/canvas v0.12.1 // indirect
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
