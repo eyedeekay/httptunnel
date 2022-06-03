@@ -3,7 +3,6 @@ package i2pbrowserproxy
 import (
 	"crypto/tls"
 	"fmt"
-	"golang.org/x/time/rate"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,17 +12,20 @@ import (
 	"strconv"
 	"strings"
 	"time"
-)
 
-import (
 	"github.com/eyedeekay/goSam"
-	"github.com/eyedeekay/goSam/compat"
-	"github.com/eyedeekay/httptunnel/common"
-	"github.com/eyedeekay/sam-forwarder/config"
+	"golang.org/x/time/rate"
+
+	//"github.com/eyedeekay/goSam/compat"
+	proxycommon "github.com/eyedeekay/httptunnel/common"
+
+	i2ptunconf "github.com/eyedeekay/sam-forwarder/config"
 	"github.com/eyedeekay/sam-forwarder/hashhash"
-	"github.com/eyedeekay/sam-forwarder/i2pkeys"
-	"github.com/eyedeekay/sam-forwarder/interface"
-	"github.com/eyedeekay/sam3/i2pkeys"
+
+	sfi2pkeys "github.com/eyedeekay/sam-forwarder/i2pkeys"
+
+	"github.com/eyedeekay/i2pkeys"
+	samtunnel "github.com/eyedeekay/sam-forwarder/interface"
 )
 
 type samClient struct {
@@ -90,7 +92,9 @@ func (f *SAMMultiProxy) ID() string {
 }
 
 func (p *SAMMultiProxy) Keys() i2pkeys.I2PKeys {
-	k, _ := samkeys.DestToKeys(p.findClient(p.recent).goSam.Destination())
+	//k, _ := samkeys.DestToKeys(
+	k := p.findClient(p.recent).goSam.Destination()
+	//)
 	return k
 }
 

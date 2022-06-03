@@ -3,8 +3,6 @@ package i2phttpproxy
 import (
 	"crypto/tls"
 	"fmt"
-	"golang.org/x/net/proxy"
-	"golang.org/x/time/rate"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,19 +15,26 @@ import (
 	"strconv"
 	"strings"
 	"time"
-)
 
-import (
 	"github.com/eyedeekay/goSam"
-	"github.com/eyedeekay/goSam/compat"
-	"github.com/eyedeekay/httptunnel/common"
-	"github.com/eyedeekay/sam-forwarder/config"
+	"golang.org/x/net/proxy"
+	"golang.org/x/time/rate"
+
+	//"github.com/eyedeekay/goSam/compat"
+	proxycommon "github.com/eyedeekay/httptunnel/common"
+
+	i2ptunconf "github.com/eyedeekay/sam-forwarder/config"
 	"github.com/eyedeekay/sam-forwarder/hashhash"
-	"github.com/eyedeekay/sam-forwarder/i2pkeys"
-	"github.com/eyedeekay/sam-forwarder/interface"
-	"github.com/eyedeekay/sam-forwarder/tcp"
-	"github.com/eyedeekay/sam3/i2pkeys"
-	"github.com/mwitkow/go-http-dialer"
+	samoptions "github.com/eyedeekay/sam-forwarder/options"
+
+	sfi2pkeys "github.com/eyedeekay/sam-forwarder/i2pkeys"
+
+	samtunnel "github.com/eyedeekay/sam-forwarder/interface"
+
+	"github.com/eyedeekay/i2pkeys"
+	samforwarder "github.com/eyedeekay/sam-forwarder/tcp"
+
+	http_dialer "github.com/mwitkow/go-http-dialer"
 	"github.com/phayes/freeport"
 )
 
@@ -78,7 +83,7 @@ func (f *SAMHTTPProxy) ID() string {
 }
 
 func (f *SAMHTTPProxy) Keys() i2pkeys.I2PKeys {
-	k, _ := samkeys.DestToKeys(f.goSam.Destination())
+	k := f.goSam.PrivateAddr()
 	return k
 }
 
@@ -423,40 +428,40 @@ func (handler *SAMHTTPProxy) Load() (samtunnel.SAMTunnel, error) {
 			config.TunName = handler.Conf.TunName + "-outproxy"
 			config.ClientDest = handler.UseOutProxy
 			handler.outproxy, err = samforwarder.NewSAMClientForwarderFromOptions(
-				samforwarder.SetClientSaveFile(config.SaveFile),
-				samforwarder.SetClientFilePath(config.SaveDirectory),
-				samforwarder.SetClientHost(config.TargetHost),
-				samforwarder.SetClientPort(config.TargetPort),
-				samforwarder.SetClientSAMHost(config.SamHost),
-				samforwarder.SetClientSAMPort(config.SamPort),
-				samforwarder.SetClientSigType(config.SigType),
-				samforwarder.SetClientName(config.TunName),
-				samforwarder.SetClientInLength(config.InLength),
-				samforwarder.SetClientOutLength(config.OutLength),
-				samforwarder.SetClientInVariance(config.InVariance),
-				samforwarder.SetClientOutVariance(config.OutVariance),
-				samforwarder.SetClientInQuantity(config.InQuantity),
-				samforwarder.SetClientOutQuantity(config.OutQuantity),
-				samforwarder.SetClientInBackups(config.InBackupQuantity),
-				samforwarder.SetClientOutBackups(config.OutBackupQuantity),
-				samforwarder.SetClientEncrypt(config.EncryptLeaseSet),
-				samforwarder.SetClientLeaseSetKey(config.LeaseSetKey),
-				samforwarder.SetClientLeaseSetPrivateKey(config.LeaseSetPrivateKey),
-				samforwarder.SetClientLeaseSetPrivateSigningKey(config.LeaseSetPrivateSigningKey),
-				samforwarder.SetClientAllowZeroIn(config.InAllowZeroHop),
-				samforwarder.SetClientAllowZeroOut(config.OutAllowZeroHop),
-				samforwarder.SetClientFastRecieve(config.FastRecieve),
-				samforwarder.SetClientCompress(config.UseCompression),
-				samforwarder.SetClientReduceIdle(config.ReduceIdle),
-				samforwarder.SetClientReduceIdleTimeMs(config.ReduceIdleTime),
-				samforwarder.SetClientReduceIdleQuantity(config.ReduceIdleQuantity),
-				samforwarder.SetClientCloseIdle(config.CloseIdle),
-				samforwarder.SetClientCloseIdleTimeMs(config.CloseIdleTime),
-				samforwarder.SetClientAccessListType(config.AccessListType),
-				samforwarder.SetClientAccessList(config.AccessList),
-				samforwarder.SetClientMessageReliability(config.MessageReliability),
-				samforwarder.SetClientPassword(config.KeyFilePath),
-				samforwarder.SetClientDestination(config.ClientDest),
+				samoptions.SetSaveFile(config.SaveFile),
+				samoptions.SetFilePath(config.SaveDirectory),
+				samoptions.SetHost(config.TargetHost),
+				samoptions.SetPort(config.TargetPort),
+				samoptions.SetSAMHost(config.SamHost),
+				samoptions.SetSAMPort(config.SamPort),
+				samoptions.SetSigType(config.SigType),
+				samoptions.SetName(config.TunName),
+				samoptions.SetInLength(config.InLength),
+				samoptions.SetOutLength(config.OutLength),
+				samoptions.SetInVariance(config.InVariance),
+				samoptions.SetOutVariance(config.OutVariance),
+				samoptions.SetInQuantity(config.InQuantity),
+				samoptions.SetOutQuantity(config.OutQuantity),
+				samoptions.SetInBackups(config.InBackupQuantity),
+				samoptions.SetOutBackups(config.OutBackupQuantity),
+				samoptions.SetEncrypt(config.EncryptLeaseSet),
+				samoptions.SetLeaseSetKey(config.LeaseSetKey),
+				samoptions.SetLeaseSetPrivateKey(config.LeaseSetPrivateKey),
+				samoptions.SetLeaseSetPrivateSigningKey(config.LeaseSetPrivateSigningKey),
+				samoptions.SetAllowZeroIn(config.InAllowZeroHop),
+				samoptions.SetAllowZeroOut(config.OutAllowZeroHop),
+				samoptions.SetFastRecieve(config.FastRecieve),
+				samoptions.SetCompress(config.UseCompression),
+				samoptions.SetReduceIdle(config.ReduceIdle),
+				samoptions.SetReduceIdleTimeMs(config.ReduceIdleTime),
+				samoptions.SetReduceIdleQuantity(config.ReduceIdleQuantity),
+				samoptions.SetCloseIdle(config.CloseIdle),
+				samoptions.SetCloseIdleTimeMs(config.CloseIdleTime),
+				samoptions.SetAccessListType(config.AccessListType),
+				samoptions.SetAccessList(config.AccessList),
+				samoptions.SetMessageReliability(config.MessageReliability),
+				samoptions.SetPassword(config.KeyFilePath),
+				samoptions.SetDestination(config.ClientDest),
 			)
 			if err != nil {
 				return nil, err
